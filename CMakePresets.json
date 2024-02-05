@@ -1,0 +1,118 @@
+{
+  "version": 2,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "Default Config",
+      "description": "Default build using",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": {
+          "type": "STRING",
+          "value": "Debug"
+        },
+        "BUILD_TESTS": {
+          "type": "BOOL",
+          "value": "ON"
+        }
+      }
+    },
+    {
+      "name": "sanitized",
+      "inherits": "default",
+      "displayName": "sanitized",
+      "hidden": true,
+      "description": "Shared flags for the sanitized build - do not use directly",
+      "binaryDir": "${sourceDir}/build/sanitized",
+      "environment": {
+        "SANITIZER_FLAGS": "-fPIC -g -fno-omit-frame-pointer -fno-optimize-sibling-calls"
+      }
+    },
+    {
+      "name": "asan",
+      "inherits": "sanitized",
+      "displayName": "asan",
+      "description": "Address Sanitizer",
+      "binaryDir": "${sourceDir}/build/asan",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": {
+          "type": "STRING",
+          "value": "$env{SANITIZER_FLAGS} -fsanitize=address"
+        }
+      }
+    },
+    {
+      "name": "msan",
+      "inherits": "sanitized",
+      "displayName": "msan",
+      "description": "Memory Sanitizer",
+      "binaryDir": "${sourceDir}/build/memory",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": {
+          "type": "STRING",
+          "value": "$env{SANITIZER_FLAGS} -fsanitize=memory"
+        }
+      }
+    },
+    {
+      "name": "tsan",
+      "inherits": "sanitized",
+      "displayName": "tsan",
+      "description": "Thread Sanitizer",
+      "binaryDir": "${sourceDir}/build/thread",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": {
+          "type": "STRING",
+          "value": "$env{SANITIZER_FLAGS} -fsanitize=thread"
+        }
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "default",
+      "configurePreset": "default"
+    },
+    {
+      "name": "asan",
+      "configurePreset": "asan"
+    },
+    {
+      "name": "msan",
+      "configurePreset": "msan"
+    },
+    {
+      "name": "tsan",
+      "configurePreset": "tsan"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "default",
+      "configurePreset": "default",
+      "output": {"outputOnFailure": true},
+      "execution": {"noTestsAction": "error", "stopOnFailure": true}
+    },
+    {
+      "name": "asan",
+      "configurePreset": "asan",
+      "inherits": "default"
+    },
+    {
+      "name": "msan",
+      "configurePreset": "msan",
+      "inherits": "default"
+    },
+    {
+      "name": "tsan",
+      "configurePreset": "tsan",
+      "inherits": "default"
+    }
+  ]
+}

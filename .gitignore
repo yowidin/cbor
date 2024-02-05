@@ -1,0 +1,20 @@
+cmake-build-*/
+_build/
+build/
+.idea
+
+*.pyc
+**/.DS_Store
+
+# swap
+[._]*.s[a-w][a-z]
+[._]s[a-w][a-z]
+
+# temporary
+.netrwhist
+*~
+
+# auto-generated tag files
+tags
+.clang_complete
+.gcc-flags.json
