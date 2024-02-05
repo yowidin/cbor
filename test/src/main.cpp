@@ -8,7 +8,10 @@
 
 #include <cbor/library.h>
 
+#include <iostream>
 
 TEST_CASE("Library is callable", "[api]") {
-    REQUIRE(cbor::hello() == 42);
+   auto ec = cbor::hello();
+   std::cout << ec << " " << ec.message() << std::endl;
+   REQUIRE(!cbor::hello());
 }

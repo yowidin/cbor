@@ -19,13 +19,15 @@ file(MAKE_DIRECTORY ${CBOR_GENERATED_INCLUDE_DIR})
 # --- Actual library --- #
 add_library(cbor
     src/library.cpp
+
+    src/error.cpp
 )
 
 target_include_directories(cbor
-   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
-   PUBLIC $<BUILD_INTERFACE:${CBOR_GENERATED_INCLUDE_DIR}>
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
+    PUBLIC $<BUILD_INTERFACE:${CBOR_GENERATED_INCLUDE_DIR}>
 
-   PUBLIC $<INSTALL_INTERFACE:include>
+    PUBLIC $<INSTALL_INTERFACE:include>
 )
 
 set_target_properties(cbor PROPERTIES

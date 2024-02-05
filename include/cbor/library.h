@@ -1,7 +1,9 @@
 #pragma once
 
+#include <cbor/error.h>
+
 namespace cbor {
 
-    int hello();
+std::error_code hello();
 
 }

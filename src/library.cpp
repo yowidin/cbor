@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-int cbor::hello() {
+std::error_code cbor::hello() {
     std::cout << "Hello, World!" << std::endl;
-    return 42;
+    return cbor::error::success;
 }
