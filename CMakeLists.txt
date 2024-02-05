@@ -21,6 +21,7 @@ add_library(cbor
     src/library.cpp
 
     src/error.cpp
+    src/buffer.cpp
 )
 
 target_include_directories(cbor

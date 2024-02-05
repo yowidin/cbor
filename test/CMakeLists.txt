@@ -14,6 +14,7 @@ list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
 
 add_executable(tests
     src/main.cpp
+    src/buffer.cpp
 )
 
 set_target_properties(tests PROPERTIES CXX_STANDARD 20)
