@@ -52,3 +52,43 @@ std::error_code dynamic_buffer::ensure_capacity(std::size_t num_bytes) {
 
    return error::success;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Class: static_buffer
+////////////////////////////////////////////////////////////////////////////////
+static_buffer::static_buffer(span_t span)
+   : span_{span} {
+   // Nothing to do here
+}
+
+std::error_code static_buffer::write(const_span_t v) {
+   const auto res = ensure_capacity(v.size());
+   if (res) {
+      return res;
+   }
+
+   copy(begin(v), end(v), begin(span_) + data_size_);
+   data_size_ += v.size();
+
+   return error::success;
+}
+
+static_buffer::rollback_token_t static_buffer::begin_nested_write() {
+   // Just keep track of the data size before writing
+   return data_size_;
+}
+
+std::error_code static_buffer::rollback_nested_write(rollback_token_t token) {
+   // Rollback by changing to the original data size
+   data_size_ = token;
+   return error::success;
+}
+
+std::error_code static_buffer::ensure_capacity(std::size_t num_bytes) {
+   const auto remainder = span_.size() - data_size_;
+   if (remainder >= num_bytes) {
+      return error::success;
+   }
+
+   return error::buffer_overflow;
+}
