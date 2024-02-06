@@ -20,7 +20,7 @@ namespace cbor {
 ////////////////////////////////////////////////////////////////////////////////
 class buffer {
 public:
-   using rollback_token_t = std::size_t;
+   using rollback_token_t = std::ptrdiff_t;
    using span_t = std::span<std::uint8_t>;
    using const_span_t = std::span<const std::uint8_t>;
 
@@ -106,7 +106,7 @@ private:
 
 private:
    span_t span_;
-   std::size_t data_size_{0};
+   std::ptrdiff_t data_size_{0};
 };
 
 } // namespace cbor

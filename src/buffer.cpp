@@ -30,7 +30,7 @@ std::error_code dynamic_buffer::write(const_span_t v) {
 
 dynamic_buffer::rollback_token_t dynamic_buffer::begin_nested_write() {
    // Just keep track of the vector's size before writing
-   return vec_->size();
+   return static_cast<std::ptrdiff_t>(vec_->size());
 }
 
 std::error_code dynamic_buffer::rollback_nested_write(rollback_token_t token) {
@@ -68,7 +68,7 @@ std::error_code static_buffer::write(const_span_t v) {
    }
 
    copy(begin(v), end(v), begin(span_) + data_size_);
-   data_size_ += v.size();
+   data_size_ += static_cast<std::ptrdiff_t>(v.size());
 
    return error::success;
 }
