@@ -5,6 +5,9 @@
  */
 
 #include <cbor/buffer.h>
+#include <cbor/config.h>
+
+#include <algorithm>
 
 using namespace cbor;
 using namespace std;
@@ -15,7 +18,11 @@ using namespace std;
 dynamic_buffer::dynamic_buffer(vector_t &vec, std::size_t max_capacity)
    : vec_{&vec}
    , max_capacity_{max_capacity} {
-   // Nothing to do here
+   if constexpr (dynamic_buffer_initial_size != 0) {
+      if (max_capacity_ != buffer::unlimited_capacity) {
+         vec_->reserve(std::min(dynamic_buffer_initial_size, max_capacity));
+      }
+   }
 }
 
 std::error_code dynamic_buffer::write(const_span_t v) {

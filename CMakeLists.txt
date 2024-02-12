@@ -13,8 +13,14 @@ set(CBOR_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
 set(CBOR_GENERATED_INCLUDE_DIR "${CBOR_GENERATED_DIR}/include")
 set(CBOR_GENERATED_CMAKE_DIR "${CBOR_GENERATED_DIR}/cmake")
 
+set(CBOR_GENERATED_CONFIG_HEADER "${CBOR_GENERATED_INCLUDE_DIR}/cbor/config.h")
 set(CBOR_GENERATED_EXPORT_HEADER "${CBOR_GENERATED_INCLUDE_DIR}/cbor/export.h")
+
+# --- Library options --- #
+set(CBOR_DYNAMIC_BUFFER_INITIAL_SIZE 8 CACHE STRING "Initial amount of memory to reserve for a dynamic buffer.")
+
 file(MAKE_DIRECTORY ${CBOR_GENERATED_INCLUDE_DIR})
+configure_file(cmake/config.h.in ${CBOR_GENERATED_CONFIG_HEADER} @ONLY)
 
 # --- Actual library --- #
 add_library(cbor
@@ -47,6 +53,10 @@ endif()
 
 # --- Configure installation settings --- #
 include(GenerateExportHeader)
+generate_export_header(cbor
+   BASE_NAME CBOR
+   EXPORT_FILE_NAME ${CBOR_GENERATED_EXPORT_HEADER}
+)
 
 include(cmake/install_helper.cmake)
 include(cmake/package_helper.cmake)

@@ -7,18 +7,18 @@
 #pragma once
 
 #include <cbor/error.h>
+#include <cbor/export.h>
 
-#include <array>
-#include <cinttypes>
+#include <cstdint>
 #include <span>
 #include <vector>
 
 namespace cbor {
 
-////////////////////////////////////////////////////////////////////////////////
-/// Class: buffer
-////////////////////////////////////////////////////////////////////////////////
-class buffer {
+/**
+ * Base buffer class, provides functions for low-level buffer manipulations.
+ */
+class CBOR_EXPORT buffer {
 public:
    using rollback_token_t = std::ptrdiff_t;
    using span_t = std::span<std::uint8_t>;
@@ -44,10 +44,10 @@ public:
    [[nodiscard]] virtual std::error_code rollback_nested_write(rollback_token_t token) = 0;
 };
 
-////////////////////////////////////////////////////////////////////////////////
-/// Class: dynamic_buffer
-////////////////////////////////////////////////////////////////////////////////
-class dynamic_buffer final : public buffer {
+/**
+ * Dynamic buffer - buffer type that can grow up to an optional limit.
+ */
+class CBOR_EXPORT dynamic_buffer final : public buffer {
 public:
    using vector_t = std::vector<std::uint8_t>;
 
@@ -78,10 +78,10 @@ private:
    std::size_t max_capacity_;
 };
 
-////////////////////////////////////////////////////////////////////////////////
-/// Class: static_buffer
-////////////////////////////////////////////////////////////////////////////////
-class static_buffer final : public buffer {
+/**
+ * Static buffer - buffer with a fixed size.
+ */
+class CBOR_EXPORT static_buffer final : public buffer {
 public:
    static_buffer(span_t span);
 

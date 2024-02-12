@@ -13,14 +13,9 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/default",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": {
-          "type": "STRING",
-          "value": "Debug"
-        },
-        "BUILD_TESTS": {
-          "type": "BOOL",
-          "value": "ON"
-        }
+        "CMAKE_BUILD_TYPE": "Debug",
+        "BUILD_SHARED_LIBS": "ON",
+        "BUILD_TESTS": "ON"
       }
     },
     {

@@ -1,0 +1,7 @@
+#pragma once
+
+#include <cstdint>
+
+namespace cbor {
+inline static constexpr std::size_t dynamic_buffer_initial_size = @CBOR_DYNAMIC_BUFFER_INITIAL_SIZE@;
+}

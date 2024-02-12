@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <cbor/export.h>
+
 #include <system_error>
 
 namespace cbor {
@@ -30,7 +32,7 @@ enum class error {
    value_not_representable,
 };
 
-const std::error_category &cbor_category() noexcept;
+const std::error_category &cbor_category() noexcept CBOR_EXPORT;
 
 inline std::error_code make_error_code(cbor::error ec) {
    return {static_cast<int>(ec), cbor_category()};
@@ -41,6 +43,6 @@ inline std::error_code make_error_code(cbor::error ec) {
 namespace std {
 
 template <>
-struct is_error_code_enum<cbor::error> : true_type {};
+struct CBOR_EXPORT is_error_code_enum<cbor::error> : true_type {};
 
 } // namespace std
