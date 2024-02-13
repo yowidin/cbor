@@ -26,8 +26,9 @@ configure_file(cmake/config.h.in ${CBOR_GENERATED_CONFIG_HEADER} @ONLY)
 add_library(cbor
     src/library.cpp
 
-    src/error.cpp
     src/buffer.cpp
+    src/encoding.cpp
+    src/error.cpp
 )
 
 target_include_directories(cbor
