@@ -6,8 +6,9 @@
 
 #pragma once
 
-#include <cbor/error.h>
 #include <cbor/buffer.h>
+#include <cbor/error.h>
+#include <cbor/export.h>
 
 #include <cstdint>
 
@@ -93,9 +94,61 @@ enum class argument_size : std::uint8_t {
    eight_bytes = 0x1B,
 };
 
-[[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, std::uint8_t argument);
-[[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, std::uint16_t argument);
-[[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, std::uint32_t argument);
-[[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, std::uint64_t argument);
+[[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, std::uint8_t argument) CBOR_EXPORT;
+[[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, std::uint16_t argument) CBOR_EXPORT;
+[[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, std::uint32_t argument) CBOR_EXPORT;
+[[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, std::uint64_t argument) CBOR_EXPORT;
+
+[[nodiscard]] CBOR_EXPORT inline std::error_code encode(buffer &buf, std::uint8_t v) {
+   return encode_argument(buf, major_type::unsigned_int, v);
+}
+
+[[nodiscard]] CBOR_EXPORT inline std::error_code encode(buffer &buf, std::uint16_t v) {
+   return encode_argument(buf, major_type::unsigned_int, v);
+}
+
+[[nodiscard]] CBOR_EXPORT inline std::error_code encode(buffer &buf, std::uint32_t v) {
+   return encode_argument(buf, major_type::unsigned_int, v);
+}
+
+[[nodiscard]] CBOR_EXPORT inline std::error_code encode(buffer &buf, std::uint64_t v) {
+   return encode_argument(buf, major_type::unsigned_int, v);
+}
+
+[[nodiscard]] CBOR_EXPORT inline std::error_code encode(buffer &buf, std::int8_t v) {
+   if (v < 0) {
+      const auto argument = static_cast<std::uint8_t>(static_cast<std::int8_t>(-1) - v);
+      return encode_argument(buf, major_type::signed_int, argument);
+   } else {
+      return encode_argument(buf, major_type::unsigned_int, static_cast<uint8_t>(v));
+   }
+}
+
+[[nodiscard]] CBOR_EXPORT inline std::error_code encode(buffer &buf, std::int16_t v) {
+   if (v < 0) {
+      const auto argument = static_cast<std::uint16_t>(static_cast<std::int16_t>(-1) - v);
+      return encode_argument(buf, major_type::signed_int, argument);
+   } else {
+      return encode_argument(buf, major_type::unsigned_int, static_cast<uint16_t>(v));
+   }
+}
+
+[[nodiscard]] CBOR_EXPORT inline std::error_code encode(buffer &buf, std::int32_t v) {
+   if (v < 0) {
+      const auto argument = static_cast<std::uint32_t>(static_cast<std::int32_t>(-1) - v);
+      return encode_argument(buf, major_type::signed_int, argument);
+   } else {
+      return encode_argument(buf, major_type::unsigned_int, static_cast<uint32_t>(v));
+   }
+}
+
+[[nodiscard]] CBOR_EXPORT inline std::error_code encode(buffer &buf, std::int64_t v) {
+   if (v < 0) {
+      const auto argument = static_cast<std::uint64_t>(static_cast<std::int64_t>(-1) - v);
+      return encode_argument(buf, major_type::signed_int, argument);
+   } else {
+      return encode_argument(buf, major_type::unsigned_int, static_cast<uint64_t>(v));
+   }
+}
 
 } // namespace cbor
