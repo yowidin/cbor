@@ -11,6 +11,8 @@
 #include <cbor/export.h>
 
 #include <cstdint>
+#include <limits>
+#include <type_traits>
 
 namespace cbor {
 
@@ -94,60 +96,68 @@ enum class argument_size : std::uint8_t {
    eight_bytes = 0x1B,
 };
 
-[[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, std::uint8_t argument) CBOR_EXPORT;
-[[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, std::uint16_t argument) CBOR_EXPORT;
-[[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, std::uint32_t argument) CBOR_EXPORT;
-[[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, std::uint64_t argument) CBOR_EXPORT;
+template <typename T>
+struct is_bool : std::bool_constant<false> {};
 
-[[nodiscard]] CBOR_EXPORT inline std::error_code encode(buffer &buf, std::uint8_t v) {
-   return encode_argument(buf, major_type::unsigned_int, v);
-}
+template <>
+struct is_bool<bool> : std::bool_constant<false> {};
 
-[[nodiscard]] CBOR_EXPORT inline std::error_code encode(buffer &buf, std::uint16_t v) {
-   return encode_argument(buf, major_type::unsigned_int, v);
-}
+template <typename T>
+using is_bool_t = is_bool<std::decay_t<T>>::type;
 
-[[nodiscard]] CBOR_EXPORT inline std::error_code encode(buffer &buf, std::uint32_t v) {
-   return encode_argument(buf, major_type::unsigned_int, v);
-}
+template <typename T>
+inline constexpr bool is_bool_v = is_bool_t<T>::value;
 
-[[nodiscard]] CBOR_EXPORT inline std::error_code encode(buffer &buf, std::uint64_t v) {
-   return encode_argument(buf, major_type::unsigned_int, v);
-}
+template <typename T>
+inline constexpr auto min_int_v = std::numeric_limits<T>::min();
 
-[[nodiscard]] CBOR_EXPORT inline std::error_code encode(buffer &buf, std::int8_t v) {
-   if (v < 0) {
-      const auto argument = static_cast<std::uint8_t>(static_cast<std::int8_t>(-1) - v);
-      return encode_argument(buf, major_type::signed_int, argument);
-   } else {
-      return encode_argument(buf, major_type::unsigned_int, static_cast<uint8_t>(v));
+template <typename T>
+inline constexpr auto max_int_v = std::numeric_limits<T>::max();
+
+namespace detail {
+[[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, std::uint8_t argument);
+[[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, std::uint16_t argument);
+[[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, std::uint32_t argument);
+[[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, std::uint64_t argument);
+} // namespace detail
+
+template <typename Integer>
+   requires(std::is_unsigned_v<Integer> and !is_bool_v<Integer>)
+[[nodiscard]] CBOR_EXPORT std::error_code encode_argument(buffer &buf, major_type type, Integer argument) {
+   if (argument <= max_int_v<std::uint8_t>) {
+      return detail::encode_argument(buf, type, static_cast<std::uint8_t>(argument));
    }
-}
 
-[[nodiscard]] CBOR_EXPORT inline std::error_code encode(buffer &buf, std::int16_t v) {
-   if (v < 0) {
-      const auto argument = static_cast<std::uint16_t>(static_cast<std::int16_t>(-1) - v);
-      return encode_argument(buf, major_type::signed_int, argument);
-   } else {
-      return encode_argument(buf, major_type::unsigned_int, static_cast<uint16_t>(v));
+   if (argument <= max_int_v<std::uint16_t>) {
+      return detail::encode_argument(buf, type, static_cast<std::uint16_t>(argument));
    }
-}
 
-[[nodiscard]] CBOR_EXPORT inline std::error_code encode(buffer &buf, std::int32_t v) {
-   if (v < 0) {
-      const auto argument = static_cast<std::uint32_t>(static_cast<std::int32_t>(-1) - v);
-      return encode_argument(buf, major_type::signed_int, argument);
-   } else {
-      return encode_argument(buf, major_type::unsigned_int, static_cast<uint32_t>(v));
+   if (argument <= max_int_v<std::uint32_t>) {
+      return detail::encode_argument(buf, type, static_cast<std::uint32_t>(argument));
    }
+
+   if (argument <= max_int_v<std::uint64_t>) {
+      return detail::encode_argument(buf, type, static_cast<std::uint64_t>(argument));
+   }
+
+   return error::value_not_representable;
 }
 
-[[nodiscard]] CBOR_EXPORT inline std::error_code encode(buffer &buf, std::int64_t v) {
+template <typename Integer>
+   requires(std::is_unsigned_v<Integer> and std::is_integral_v<Integer> and !is_bool_v<Integer>)
+[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, Integer v) {
+   return encode_argument(buf, major_type::unsigned_int, v);
+}
+
+template <typename Integer>
+   requires(std::is_signed_v<Integer> and std::is_integral_v<Integer>)
+[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, Integer v) {
+   using unsigned_t = std::make_unsigned_t<Integer>;
    if (v < 0) {
-      const auto argument = static_cast<std::uint64_t>(static_cast<std::int64_t>(-1) - v);
+      const auto argument = static_cast<unsigned_t>(static_cast<unsigned_t>(-1) - v);
       return encode_argument(buf, major_type::signed_int, argument);
    } else {
-      return encode_argument(buf, major_type::unsigned_int, static_cast<uint64_t>(v));
+      return encode_argument(buf, major_type::unsigned_int, static_cast<unsigned_t>(v));
    }
 }
 

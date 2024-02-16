@@ -6,7 +6,7 @@
 
 #include <cbor/encoding.h>
 
-namespace cbor {
+namespace cbor::detail {
 
 inline constexpr uint8_t ZERO_EXTRA_BYTES_VALUE_LIMIT = 23U;
 inline constexpr uint16_t ONE_EXTRA_BYTE_VALUE_LIMIT = 0xFFU;

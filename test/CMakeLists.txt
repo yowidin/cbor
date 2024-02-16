@@ -7,10 +7,18 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/catchorg/Catch2.git
     GIT_TAG v3.5.2
 )
-
 FetchContent_MakeAvailable(Catch2)
 message(STATUS "Catch2: ${Catch2_SOURCE_DIR}")
 list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
+
+FetchContent_Declare(
+    shp
+    GIT_REPOSITORY https://github.com/yowidin/simple-hex-printer
+    GIT_TAG v0.1.0
+)
+set(BUILD_TESTS OFF)
+FetchContent_MakeAvailable(shp)
+set(BUILD_TESTS ON)
 
 add_executable(tests
     src/buffer.cpp
@@ -23,6 +31,7 @@ set_target_properties(tests PROPERTIES CXX_STANDARD 20)
 target_link_libraries(tests
     PRIVATE CBOR::library
     PRIVATE Catch2::Catch2WithMain
+    PRIVATE SimpleHexPrinter::library
 )
 
 add_test(NAME Catch2Tests COMMAND "tests")
