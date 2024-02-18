@@ -14,21 +14,19 @@ list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
 FetchContent_Declare(
     shp
     GIT_REPOSITORY https://github.com/yowidin/simple-hex-printer
-    GIT_TAG v0.1.0
+    GIT_TAG v0.1.1
 )
-set(BUILD_TESTS OFF)
 FetchContent_MakeAvailable(shp)
-set(BUILD_TESTS ON)
 
-add_executable(tests
+add_executable(cbor_tests
     src/buffer.cpp
     src/encoding.cpp
     src/main.cpp
 )
 
-set_target_properties(tests PROPERTIES CXX_STANDARD 20)
+set_target_properties(cbor_tests PROPERTIES CXX_STANDARD 20)
 
-target_link_libraries(tests
+target_link_libraries(cbor_tests
     PRIVATE CBOR::library
     PRIVATE Catch2::Catch2WithMain
     PRIVATE SimpleHexPrinter::library
