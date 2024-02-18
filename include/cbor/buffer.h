@@ -24,6 +24,51 @@ public:
    using span_t = std::span<std::uint8_t>;
    using const_span_t = std::span<const std::uint8_t>;
 
+   class rollback_helper {
+   public:
+      explicit rollback_helper(buffer &b)
+         : buf_{&b}
+         , token_{b.begin_nested_write()} {
+         // Nothing to do here
+      }
+
+      ~rollback_helper() {
+         if (buf_ && rollback_) {
+            buf_->rollback_nested_write(token_);
+         }
+      }
+
+      rollback_helper(rollback_helper &) = delete;
+      rollback_helper(rollback_helper &&o)
+         : buf_{o.buf_}
+         , token_{o.token_}
+         , rollback_{o.rollback_} {
+         o.buf_ = nullptr;
+         o.rollback_ = false;
+      }
+
+   public:
+      void commit() { rollback_ = false; }
+
+   public:
+      rollback_helper &operator=(rollback_helper &) = delete;
+      rollback_helper &operator=(rollback_helper &&o) {
+         buf_ = o.buf_;
+         token_ = o.token_;
+         rollback_ = o.rollback_;
+
+         o.buf_ = nullptr;
+         o.rollback_ = false;
+
+         return *this;
+      }
+
+   private:
+      buffer *buf_;
+      rollback_token_t token_;
+      bool rollback_{true};
+   };
+
 public:
    inline static constexpr std::size_t unlimited_capacity = -1;
 
@@ -40,8 +85,11 @@ public:
    [[nodiscard]] virtual std::error_code write(const_span_t v) = 0;
    [[nodiscard]] virtual std::size_t size() = 0;
 
+   rollback_helper get_rollback_helper() { return rollback_helper(*this); }
+
+protected:
    [[nodiscard]] virtual rollback_token_t begin_nested_write() = 0;
-   [[nodiscard]] virtual std::error_code rollback_nested_write(rollback_token_t token) = 0;
+   virtual void rollback_nested_write(rollback_token_t token) = 0;
 };
 
 /**
@@ -67,8 +115,9 @@ public:
    [[nodiscard]] std::error_code write(const_span_t v) override;
    [[nodiscard]] std::size_t size() override { return vec_->size(); };
 
+protected:
    [[nodiscard]] rollback_token_t begin_nested_write() override;
-   [[nodiscard]] std::error_code rollback_nested_write(rollback_token_t token) override;
+   void rollback_nested_write(rollback_token_t token) override;
 
 private:
    [[nodiscard]] std::error_code ensure_capacity(std::size_t num_bytes);
@@ -98,8 +147,9 @@ public:
    [[nodiscard]] std::error_code write(const_span_t v) override;
    [[nodiscard]] std::size_t size() override { return data_size_; };
 
+protected:
    [[nodiscard]] rollback_token_t begin_nested_write() override;
-   [[nodiscard]] std::error_code rollback_nested_write(rollback_token_t token) override;
+   void rollback_nested_write(rollback_token_t token) override;
 
 private:
    [[nodiscard]] std::error_code ensure_capacity(std::size_t num_bytes);

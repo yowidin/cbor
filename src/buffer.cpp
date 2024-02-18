@@ -40,10 +40,9 @@ dynamic_buffer::rollback_token_t dynamic_buffer::begin_nested_write() {
    return static_cast<std::ptrdiff_t>(vec_->size());
 }
 
-std::error_code dynamic_buffer::rollback_nested_write(rollback_token_t token) {
+void dynamic_buffer::rollback_nested_write(rollback_token_t token) {
    // Rollback by resizing to the original size
    vec_->resize(token);
-   return error::success;
 }
 
 std::error_code dynamic_buffer::ensure_capacity(std::size_t num_bytes) {
@@ -85,10 +84,9 @@ static_buffer::rollback_token_t static_buffer::begin_nested_write() {
    return data_size_;
 }
 
-std::error_code static_buffer::rollback_nested_write(rollback_token_t token) {
+void static_buffer::rollback_nested_write(rollback_token_t token) {
    // Rollback by changing to the original data size
    data_size_ = token;
-   return error::success;
 }
 
 std::error_code static_buffer::ensure_capacity(std::size_t num_bytes) {
