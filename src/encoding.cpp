@@ -6,7 +6,9 @@
 
 #include <cbor/encoding.h>
 
-namespace cbor::detail {
+namespace cbor {
+
+namespace detail {
 
 inline constexpr uint8_t ZERO_EXTRA_BYTES_VALUE_LIMIT = 23U;
 inline constexpr uint16_t ONE_EXTRA_BYTE_VALUE_LIMIT = 0xFFU;
@@ -81,5 +83,7 @@ std::error_code encode_argument(buffer &buf, major_type type, std::uint64_t v) {
 
    return buf.write({type | argument_size::eight_bytes, b0, b1, b2, b3, b4, b5, b6, b7});
 }
+
+} // namespace detail
 
 } // namespace cbor
