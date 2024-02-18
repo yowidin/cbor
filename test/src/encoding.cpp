@@ -29,14 +29,27 @@ void compare_arrays(Integer v, const std::vector<std::uint8_t> &res, const std::
    REQUIRE(m.second == std::end(expected));
 }
 
+template <bool AsArgument, typename T>
+void encoding_helper(const T &value, std::initializer_list<std::uint8_t> expected) {
+   std::vector<std::uint8_t> target{};
+   dynamic_buffer buf{target};
+
+   std::error_code res;
+   if constexpr (AsArgument) {
+      res = encode_argument(buf, major_type::unsigned_int, value);
+   } else {
+      res = encode(buf, value);
+   }
+
+   REQUIRE(!res);
+
+   compare_arrays(value, target, expected);
+}
+
 TEST_CASE("Check argument encoding", "[encoding]") {
    // Ensure that an unsigned int is encoded as the expected byte array
    auto check_encoding = [](auto value, std::initializer_list<std::uint8_t> expected) {
-      std::vector<std::uint8_t> target{};
-      dynamic_buffer buf{target};
-      auto res = encode_argument(buf, major_type::unsigned_int, value);
-      REQUIRE(!res);
-      compare_arrays(value, target, expected);
+      encoding_helper<true>(value, expected);
    };
 
    check_encoding(0U, {0x00});
@@ -55,11 +68,7 @@ TEST_CASE("Check argument encoding", "[encoding]") {
 TEST_CASE("Check unsigned encoding", "[encoding]") {
    // Ensure that an unsigned int is encoded as the expected byte array
    auto check_encoding = [](auto value, std::initializer_list<std::uint8_t> expected) {
-      std::vector<std::uint8_t> target{};
-      dynamic_buffer buf{target};
-      auto res = encode(buf, value);
-      REQUIRE(!res);
-      compare_arrays(value, target, expected);
+      encoding_helper<false>(value, expected);
    };
 
    check_encoding(0U, {0x00});
@@ -78,11 +87,7 @@ TEST_CASE("Check unsigned encoding", "[encoding]") {
 TEST_CASE("Check signed encoding", "[encoding]") {
    // Ensure that a signed int is encoded as the expected byte array
    auto check_encoding = [](auto value, std::initializer_list<std::uint8_t> expected) {
-      std::vector<std::uint8_t> target{};
-      dynamic_buffer buf{target};
-      auto res = encode(buf, value);
-      REQUIRE(!res);
-      compare_arrays(value, target, expected);
+      encoding_helper<false>(value, expected);
    };
 
    check_encoding(-1, {0x20});
@@ -91,4 +96,14 @@ TEST_CASE("Check signed encoding", "[encoding]") {
    check_encoding(static_cast<long>(-100), {0x38, 0x63});
    check_encoding(-1000, {0x39, 0x03, 0xE7});
    check_encoding(std::numeric_limits<std::int64_t>::min(), {0x3B, 0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF});
+}
+
+TEST_CASE("Check array encoding", "[encoding]") {
+   // Ensure that a signed int is encoded as the expected byte array
+   auto check_encoding = [](std::initializer_list<std::uint8_t> value, std::initializer_list<std::uint8_t> expected) {
+      encoding_helper<false>(value, expected);
+   };
+
+   check_encoding({}, {0x40});
+   check_encoding({0x01, 0x02, 0x03, 0x04}, {0x44, 0x01, 0x02, 0x03, 0x04});
 }
