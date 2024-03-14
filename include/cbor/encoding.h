@@ -104,6 +104,9 @@ namespace detail {
 [[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, std::uint64_t argument);
 } // namespace detail
 
+////////////////////////////////////////////////////////////////////////////////
+/// Integers
+////////////////////////////////////////////////////////////////////////////////
 template <UnsignedInt T>
 [[nodiscard]] CBOR_EXPORT std::error_code encode_argument(buffer &buf, major_type type, T argument) {
    if (argument <= max_int_v<std::uint8_t>) {
@@ -141,6 +144,9 @@ template <SignedInt T>
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Byte Arrays
+////////////////////////////////////////////////////////////////////////////////
 template <ConstByteArray T>
 [[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const T &v) {
    auto rollback_helper = buf.get_rollback_helper();
@@ -160,5 +166,37 @@ template <ConstByteArray T>
 
    return res;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Strings
+////////////////////////////////////////////////////////////////////////////////
+template <ConstTextArray T>
+[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const T &v) {
+   auto rollback_helper = buf.get_rollback_helper();
+
+   auto size = std::size(v);
+   if (size != 0) {
+      const char last_char = *(std::begin(v) + (size - 1));
+      if (last_char == '\0') {
+         size -= 1; // Skip the NULL-terminator
+      }
+   }
+
+   auto res = encode_argument(buf, major_type::text_string, size);
+   if (res) {
+      return res;
+   }
+
+   res = buf.write(buffer::const_span_t{reinterpret_cast<const std::uint8_t *>(&*std::cbegin(v)), size});
+   if (res) {
+      return res;
+   }
+
+   rollback_helper.commit();
+
+   return res;
+}
+
+[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const char *v);
 
 } // namespace cbor

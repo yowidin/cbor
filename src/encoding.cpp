@@ -6,6 +6,8 @@
 
 #include <cbor/encoding.h>
 
+#include <cstring>
+
 namespace cbor {
 
 namespace detail {
@@ -85,5 +87,10 @@ std::error_code encode_argument(buffer &buf, major_type type, std::uint64_t v) {
 }
 
 } // namespace detail
+
+[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const char *v) {
+   const auto size = std::strlen(v);
+   return encode(buf, std::string_view(v, size));
+}
 
 } // namespace cbor

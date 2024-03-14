@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <limits>
+#include <ranges>
 #include <type_traits>
 
 namespace cbor {
@@ -39,18 +40,36 @@ concept UnsignedInt = std::is_unsigned_v<T> && std::is_integral_v<T> && !is_bool
 template <typename T>
 concept SignedInt = std::is_signed_v<T> && std::is_integral_v<T>;
 
-template <typename T>
-concept ValueOrConstReferenceU8 = std::is_same_v<T, const std::uint8_t &> || std::is_same_v<T, std::uint8_t>;
+template <typename Target, typename Source>
+concept CopyableAs = std::is_same_v<Target, std::remove_cvref_t<Source>>;
+
+template <typename Source>
+concept CopyableAsU8 = CopyableAs<std::uint8_t, Source>;
+
+template <typename Source>
+concept CopyableAsChar = CopyableAs<char, Source>;
 
 template <class T>
-concept ConstByteArray = requires(const T &t) {
-   { *std::cbegin(t) } -> ValueOrConstReferenceU8;
+concept ConstByteArray = std::ranges::contiguous_range<T> && requires(const T &t) {
+   { *std::cbegin(t) } -> CopyableAsU8;
    { std::size(t) } -> std::convertible_to<std::size_t>;
 };
 
 template <class T>
-concept ByteArray = requires(T &t) {
+concept ByteArray = std::ranges::contiguous_range<T> && requires(T &t) {
    { *std::begin(t) } -> std::same_as<std::uint8_t &>;
+   { std::size(t) } -> std::convertible_to<std::size_t>;
+};
+
+template <class T>
+concept ConstTextArray = std::ranges::contiguous_range<T> && requires(T &t) {
+   { *std::begin(t) } -> CopyableAsChar;
+   { std::size(t) } -> std::convertible_to<std::size_t>;
+};
+
+template <class T>
+concept TextArray = std::ranges::contiguous_range<T> && requires(T &t) {
+   { *std::begin(t) } -> std::same_as<char &>;
    { std::size(t) } -> std::convertible_to<std::size_t>;
 };
 

@@ -107,3 +107,27 @@ TEST_CASE("Check array encoding", "[encoding]") {
    check_encoding({}, {0x40});
    check_encoding({0x01, 0x02, 0x03, 0x04}, {0x44, 0x01, 0x02, 0x03, 0x04});
 }
+
+TEST_CASE("Check string encoding", "[encoding]") {
+   // Ensure that strings are encoded as the expected byte array
+   auto check_encoding = [](const auto &value, std::initializer_list<std::uint8_t> expected) {
+      encoding_helper<false>(value, expected);
+   };
+
+   check_encoding("", {0x60});
+   check_encoding("a", {0x61, 0x61});
+   check_encoding("IETF", {0x64, 0x49, 0x45, 0x54, 0x46});
+   check_encoding("\"\\", {0x62, 0x22, 0x5C});
+   check_encoding("\u00fc", {0x62, 0xC3, 0xBC});
+   check_encoding("\u6c34", {0x63, 0xE6, 0xB0, 0xB4});
+
+   // Standard strings should also drop the \0
+   check_encoding(std::string(""), {0x60});
+   check_encoding(std::string("a"), {0x61, 0x61});
+
+   const char *decayed_char_array_1 = "";
+   check_encoding(decayed_char_array_1, {0x60});
+
+   const char *decayed_char_array_2 = "a";
+   check_encoding(decayed_char_array_2, {0x61, 0x61});
+}

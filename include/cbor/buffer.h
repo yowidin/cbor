@@ -39,7 +39,7 @@ public:
       }
 
       rollback_helper(rollback_helper &) = delete;
-      rollback_helper(rollback_helper &&o)
+      rollback_helper(rollback_helper &&o) noexcept
          : buf_{o.buf_}
          , token_{o.token_}
          , rollback_{o.rollback_} {
@@ -52,7 +52,7 @@ public:
 
    public:
       rollback_helper &operator=(rollback_helper &) = delete;
-      rollback_helper &operator=(rollback_helper &&o) {
+      rollback_helper &operator=(rollback_helper &&o) noexcept {
          buf_ = o.buf_;
          token_ = o.token_;
          rollback_ = o.rollback_;
