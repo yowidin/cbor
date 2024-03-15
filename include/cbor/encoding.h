@@ -12,6 +12,7 @@
 #include <cbor/type_traits.h>
 
 #include <cstdint>
+#include <cstddef>
 #include <limits>
 #include <type_traits>
 
@@ -95,6 +96,43 @@ enum class argument_size : std::uint8_t {
 
    //! The additional information is stored in the following eight bytes
    eight_bytes = 0x1B,
+};
+
+enum class simple_type : std::uint8_t {
+   //! Unassigned values
+   unassigned_start = 0x00,
+   unassigned_end = 0x13,
+
+   //! False
+   false_type = 0x14,
+
+   //! True
+   true_type = 0x15,
+
+   //! NULL
+   null_type = 0x16,
+
+   //! Undefined
+   undefined_type = 0x17,
+
+   //! Simple value (value 32..255 in following byte)
+   simple_value = 0x18,
+
+   //! IEEE 754 Half-Precision Float (16 bits follow)
+   hp_float = 0x19,
+
+   //! IEEE 754 Single-Precision Float (32 bits follow)
+   sp_float = 0x1A,
+
+   //! IEEE 754 Double-Precision Float (64 bits follow)
+   dp_float = 0x1B,
+
+   //! Reserved, not well-formed in the present RFC document
+   reserved_start = 0x1C,
+   reserved_end = 0x1E,
+
+   //! "break" stop code for indefinite-length items
+   break_type = 0x1F,
 };
 
 namespace detail {
@@ -198,5 +236,12 @@ template <ConstTextArray T>
 }
 
 [[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const char *v);
+
+////////////////////////////////////////////////////////////////////////////////
+/// Simple Types
+////////////////////////////////////////////////////////////////////////////////
+[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, bool v);
+
+[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, std::nullptr_t);
 
 } // namespace cbor

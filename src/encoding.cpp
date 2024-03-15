@@ -23,6 +23,12 @@ inline std::uint8_t operator|(major_type m, argument_size s) {
    return lhs | rhs;
 }
 
+inline std::uint8_t operator|(major_type m, simple_type s) {
+   const auto lhs = static_cast<std::underlying_type_t<major_type>>(m);
+   const auto rhs = static_cast<std::underlying_type_t<simple_type>>(s);
+   return lhs | rhs;
+}
+
 std::error_code encode_argument(buffer &buf, major_type type, std::uint8_t v) {
    if (v <= ZERO_EXTRA_BYTES_VALUE_LIMIT) {
       // The argument's value is the value of the additional information
@@ -88,9 +94,25 @@ std::error_code encode_argument(buffer &buf, major_type type, std::uint64_t v) {
 
 } // namespace detail
 
-[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const char *v) {
+////////////////////////////////////////////////////////////////////////////////
+/// Strings
+////////////////////////////////////////////////////////////////////////////////
+std::error_code encode(buffer &buf, const char *v) {
    const auto size = std::strlen(v);
    return encode(buf, std::string_view(v, size));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Simple Types
+////////////////////////////////////////////////////////////////////////////////
+std::error_code encode(buffer &buf, bool v) {
+   using namespace cbor::detail;
+   return buf.write({major_type::simple | (v ? simple_type::true_type : simple_type::false_type)});
+}
+
+std::error_code encode(buffer &buf, std::nullptr_t) {
+   using namespace cbor::detail;
+   return buf.write({major_type::simple | simple_type::null_type});
 }
 
 } // namespace cbor

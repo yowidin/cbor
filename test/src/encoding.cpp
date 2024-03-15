@@ -14,13 +14,20 @@
 
 using namespace cbor;
 
-template <typename Integer>
-void compare_arrays(Integer v, const std::vector<std::uint8_t> &res, const std::vector<std::uint8_t> &expected) {
+template <typename T>
+void compare_arrays(T v, const std::vector<std::uint8_t> &res, const std::vector<std::uint8_t> &expected) {
    REQUIRE(res.size() == expected.size());
 
    auto m = std::mismatch(std::begin(res), std::end(res), std::begin(expected));
    if (m.first != std::end(res) || m.second != std::end(expected)) {
-      std::cerr << "Array missmatch for " << shp::hex(v) << ":\n"
+      std::cerr << "Array missmatch for ";
+      if constexpr (std::is_same_v<bool, T>) {
+         // SHP cannot handle booleans at the moment
+         std::cerr << '"' << std::boolalpha << v << std::noboolalpha << '"';
+      } else {
+         std::cerr << shp::hex(v);
+      }
+      std::cerr << ":\n"
                 << "Expected:\n"
                 << shp::hex(expected) << "\n\nFound:\n"
                 << shp::hex(res) << std::endl;
@@ -130,4 +137,14 @@ TEST_CASE("Check string encoding", "[encoding]") {
 
    const char *decayed_char_array_2 = "a";
    check_encoding(decayed_char_array_2, {0x61, 0x61});
+}
+
+TEST_CASE("Check simple type encoding", "[encoding]") {
+   auto check_encoding = [](const auto &value, std::initializer_list<std::uint8_t> expected) {
+     encoding_helper<false>(value, expected);
+   };
+
+   check_encoding(false, {0xF4});
+   check_encoding(true, {0xF5});
+   check_encoding(nullptr, {0xF6});
 }
