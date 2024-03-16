@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <limits>
+#include <optional>
 #include <type_traits>
 
 namespace cbor {
@@ -243,5 +244,14 @@ template <ConstTextArray T>
 [[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, bool v);
 
 [[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, std::nullptr_t);
+
+template <typename T>
+[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const std::optional<T> &v) {
+   if (!v.has_value()) {
+      return encode(buf, nullptr);
+   } else {
+      return encode(buf, *v);
+   }
+}
 
 } // namespace cbor

@@ -141,10 +141,22 @@ TEST_CASE("Check string encoding", "[encoding]") {
 
 TEST_CASE("Check simple type encoding", "[encoding]") {
    auto check_encoding = [](const auto &value, std::initializer_list<std::uint8_t> expected) {
-     encoding_helper<false>(value, expected);
+      encoding_helper<false>(value, expected);
    };
 
    check_encoding(false, {0xF4});
    check_encoding(true, {0xF5});
    check_encoding(nullptr, {0xF6});
+}
+
+TEST_CASE("Check optional encoding", "[encoding]") {
+   auto check_encoding = [](const auto &value, std::initializer_list<std::uint8_t> expected) {
+      encoding_helper<false>(value, expected);
+   };
+
+   check_encoding(std::optional<int>{}, {0xF6});
+   check_encoding(std::optional<int>{25}, {0x18, 0x19});
+
+   check_encoding(std::optional<std::string>{}, {0xF6});
+   check_encoding(std::optional<std::string>{"IETF"}, {0x64, 0x49, 0x45, 0x54, 0x46});
 }
