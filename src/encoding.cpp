@@ -6,6 +6,8 @@
 
 #include <cbor/encoding.h>
 
+#include <cmath>
+
 #include <cstring>
 
 namespace cbor {
@@ -113,6 +115,89 @@ std::error_code encode(buffer &buf, bool v) {
 std::error_code encode(buffer &buf, std::nullptr_t) {
    using namespace cbor::detail;
    return buf.write({major_type::simple | simple_type::null_type});
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Simple Types: floats
+////////////////////////////////////////////////////////////////////////////////
+std::error_code encode(buffer &buf, float v) {
+   using namespace cbor::detail;
+   static_assert((int)argument_size::eight_bytes == (int)simple_type::dp_float);
+   static_assert((int)argument_size::four_bytes == (int)simple_type::sp_float);
+   static_assert((int)argument_size::two_bytes == (int)simple_type::hp_float);
+
+   union {
+      float f;
+      uint32_t i;
+   } u_single = {.f = static_cast<float>(v)};
+
+   // TODO: Half floats
+   union {
+      uint16_t i;
+      char buf[sizeof(uint16_t)];
+   } u_half;
+
+   int value_type = std::fpclassify(v);
+   switch (value_type) {
+      case FP_NAN:
+         // Always use deterministic encoding - the smallest possible float for NAN
+         return buf.write({major_type::simple | simple_type::hp_float, 0x7E, 0x00});
+      case FP_INFINITE:
+         // Always use deterministic encoding - the smallest possible float for INF and -INF
+         if (v > 0) {
+            return buf.write({major_type::simple | simple_type::hp_float, 0x7C, 0x00});
+         } else {
+            return buf.write({major_type::simple | simple_type::hp_float, 0xFC, 0x00});
+         }
+      default:
+         // TODO: Check for half floats
+         return detail::encode_argument(buf, major_type::simple, u_single.i);
+   }
+}
+
+std::error_code encode(buffer &buf, double v) {
+   using namespace cbor::detail;
+   // Ensure matching encoding
+   static_assert((int)argument_size::eight_bytes == (int)simple_type::dp_float);
+   static_assert((int)argument_size::four_bytes == (int)simple_type::sp_float);
+   static_assert((int)argument_size::two_bytes == (int)simple_type::hp_float);
+
+   union {
+      double f;
+      uint64_t i;
+   } u_double = {.f = v};
+
+   union {
+      float f;
+      uint32_t i;
+   } u_single = {.f = static_cast<float>(v)};
+
+   // TODO: Half floats
+   union {
+      uint16_t i;
+      char buf[sizeof(uint16_t)];
+   } u_half;
+
+   int value_type = std::fpclassify(v);
+   switch (value_type) {
+      case FP_NAN:
+         // Always use deterministic encoding - the smallest possible float for NAN
+         return buf.write({major_type::simple | simple_type::hp_float, 0x7E, 0x00});
+      case FP_INFINITE:
+         // Always use deterministic encoding - the smallest possible float for INF and -INF
+         if (u_double.f > 0) {
+            return buf.write({major_type::simple | simple_type::hp_float, 0x7C, 0x00});
+         } else {
+            return buf.write({major_type::simple | simple_type::hp_float, 0xFC, 0x00});
+         }
+      default:
+         if (u_single.f == u_double.f) {
+            // TODO: Check for half floats
+            return detail::encode_argument(buf, major_type::simple, u_single.i);
+         } else {
+            return detail::encode_argument(buf, major_type::simple, u_double.i);
+         }
+   }
 }
 
 } // namespace cbor

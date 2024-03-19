@@ -254,4 +254,10 @@ template <typename T>
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Simple Types: floats
+////////////////////////////////////////////////////////////////////////////////
+[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, float v);
+[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, double v);
+
 } // namespace cbor
