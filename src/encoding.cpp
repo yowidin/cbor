@@ -6,6 +6,8 @@
 
 #include <cbor/encoding.h>
 
+#include <fhf/fhf.hh>
+
 #include <cmath>
 
 #include <cstring>
@@ -31,8 +33,8 @@ inline std::uint8_t operator|(major_type m, simple_type s) {
    return lhs | rhs;
 }
 
-std::error_code encode_argument(buffer &buf, major_type type, std::uint8_t v) {
-   if (v <= ZERO_EXTRA_BYTES_VALUE_LIMIT) {
+std::error_code encode_argument(buffer &buf, major_type type, std::uint8_t v, bool compress) {
+   if (compress && v <= ZERO_EXTRA_BYTES_VALUE_LIMIT) {
       // The argument's value is the value of the additional information
       const auto value = (type | argument_size::no_bytes) | v;
       return buf.write(value);
@@ -41,9 +43,9 @@ std::error_code encode_argument(buffer &buf, major_type type, std::uint8_t v) {
    return buf.write({type | argument_size::one_byte, v});
 }
 
-std::error_code encode_argument(buffer &buf, major_type type, std::uint16_t v) {
-   if (v <= ONE_EXTRA_BYTE_VALUE_LIMIT) {
-      return encode_argument(buf, type, static_cast<std::uint8_t>(v));
+std::error_code encode_argument(buffer &buf, major_type type, std::uint16_t v, bool compress) {
+   if (compress && v <= ONE_EXTRA_BYTE_VALUE_LIMIT) {
+      return encode_argument(buf, type, static_cast<std::uint8_t>(v), compress);
    }
 
    const auto b0 = static_cast<uint8_t>((v >> 8U) & 0xFFU);
@@ -52,13 +54,13 @@ std::error_code encode_argument(buffer &buf, major_type type, std::uint16_t v) {
    return buf.write({type | argument_size::two_bytes, b0, b1});
 }
 
-std::error_code encode_argument(buffer &buf, major_type type, std::uint32_t v) {
-   if (v <= ONE_EXTRA_BYTE_VALUE_LIMIT) {
-      return encode_argument(buf, type, static_cast<std::uint8_t>(v));
+std::error_code encode_argument(buffer &buf, major_type type, std::uint32_t v, bool compress) {
+   if (compress && v <= ONE_EXTRA_BYTE_VALUE_LIMIT) {
+      return encode_argument(buf, type, static_cast<std::uint8_t>(v), compress);
    }
 
-   if (v <= TWO_EXTRA_BYTES_VALUE_LIMIT) {
-      return encode_argument(buf, type, static_cast<std::uint16_t>(v));
+   if (compress && v <= TWO_EXTRA_BYTES_VALUE_LIMIT) {
+      return encode_argument(buf, type, static_cast<std::uint16_t>(v), compress);
    }
 
    const auto b0 = static_cast<uint8_t>((v >> 24U) & 0xFFU);
@@ -69,17 +71,17 @@ std::error_code encode_argument(buffer &buf, major_type type, std::uint32_t v) {
    return buf.write({type | argument_size::four_bytes, b0, b1, b2, b3});
 }
 
-std::error_code encode_argument(buffer &buf, major_type type, std::uint64_t v) {
-   if (v <= ONE_EXTRA_BYTE_VALUE_LIMIT) {
-      return encode_argument(buf, type, static_cast<std::uint8_t>(v));
+std::error_code encode_argument(buffer &buf, major_type type, std::uint64_t v, bool compress) {
+   if (compress && v <= ONE_EXTRA_BYTE_VALUE_LIMIT) {
+      return encode_argument(buf, type, static_cast<std::uint8_t>(v), compress);
    }
 
-   if (v <= TWO_EXTRA_BYTES_VALUE_LIMIT) {
-      return encode_argument(buf, type, static_cast<std::uint16_t>(v));
+   if (compress && v <= TWO_EXTRA_BYTES_VALUE_LIMIT) {
+      return encode_argument(buf, type, static_cast<std::uint16_t>(v), compress);
    }
 
-   if (v <= FOUR_EXTRA_BYTES_VALUE_LIMIT) {
-      return encode_argument(buf, type, static_cast<std::uint32_t>(v));
+   if (compress && v <= FOUR_EXTRA_BYTES_VALUE_LIMIT) {
+      return encode_argument(buf, type, static_cast<std::uint32_t>(v), compress);
    }
 
    const auto b0 = static_cast<uint8_t>((v >> 56U) & 0xFFU);
@@ -122,20 +124,11 @@ std::error_code encode(buffer &buf, std::nullptr_t) {
 ////////////////////////////////////////////////////////////////////////////////
 std::error_code encode(buffer &buf, float v) {
    using namespace cbor::detail;
+
+   // Ensure matching encoding
    static_assert((int)argument_size::eight_bytes == (int)simple_type::dp_float);
    static_assert((int)argument_size::four_bytes == (int)simple_type::sp_float);
    static_assert((int)argument_size::two_bytes == (int)simple_type::hp_float);
-
-   union {
-      float f;
-      uint32_t i;
-   } u_single = {.f = static_cast<float>(v)};
-
-   // TODO: Half floats
-   union {
-      uint16_t i;
-      char buf[sizeof(uint16_t)];
-   } u_half;
 
    int value_type = std::fpclassify(v);
    switch (value_type) {
@@ -149,34 +142,27 @@ std::error_code encode(buffer &buf, float v) {
          } else {
             return buf.write({major_type::simple | simple_type::hp_float, 0xFC, 0x00});
          }
-      default:
-         // TODO: Check for half floats
-         return detail::encode_argument(buf, major_type::simple, u_single.i);
+      default: {
+         // Floats require all bytes to be present (no compression is allowed), thus the last argument to
+         // encode_argument is always false
+         const auto binary_half = fhf::pack(v);
+         const auto half = fhf::unpack(binary_half);
+         if (half == v) {
+            return detail::encode_argument(buf, major_type::simple, binary_half, false);
+         }
+
+         return detail::encode_argument(buf, major_type::simple, std::bit_cast<std::uint32_t>(v), false);
+      }
    }
 }
 
 std::error_code encode(buffer &buf, double v) {
    using namespace cbor::detail;
+
    // Ensure matching encoding
    static_assert((int)argument_size::eight_bytes == (int)simple_type::dp_float);
    static_assert((int)argument_size::four_bytes == (int)simple_type::sp_float);
    static_assert((int)argument_size::two_bytes == (int)simple_type::hp_float);
-
-   union {
-      double f;
-      uint64_t i;
-   } u_double = {.f = v};
-
-   union {
-      float f;
-      uint32_t i;
-   } u_single = {.f = static_cast<float>(v)};
-
-   // TODO: Half floats
-   union {
-      uint16_t i;
-      char buf[sizeof(uint16_t)];
-   } u_half;
 
    int value_type = std::fpclassify(v);
    switch (value_type) {
@@ -185,18 +171,28 @@ std::error_code encode(buffer &buf, double v) {
          return buf.write({major_type::simple | simple_type::hp_float, 0x7E, 0x00});
       case FP_INFINITE:
          // Always use deterministic encoding - the smallest possible float for INF and -INF
-         if (u_double.f > 0) {
+         if (v > 0) {
             return buf.write({major_type::simple | simple_type::hp_float, 0x7C, 0x00});
          } else {
             return buf.write({major_type::simple | simple_type::hp_float, 0xFC, 0x00});
          }
-      default:
-         if (u_single.f == u_double.f) {
-            // TODO: Check for half floats
-            return detail::encode_argument(buf, major_type::simple, u_single.i);
-         } else {
-            return detail::encode_argument(buf, major_type::simple, u_double.i);
+      default: {
+         // Floats require all bytes to be present (no compression is allowed), thus the last argument to
+         // encode_argument is always false
+         const auto single = static_cast<float>(v);
+         if (single == v) {
+            // Double can be encoded as float, let's also check for half-float
+            const auto binary_half = fhf::pack(single);
+            const auto half = fhf::unpack(binary_half);
+            if (half == single) {
+               return detail::encode_argument(buf, major_type::simple, binary_half, false);
+            }
+
+            return detail::encode_argument(buf, major_type::simple, std::bit_cast<std::uint32_t>(single), false);
          }
+
+         return detail::encode_argument(buf, major_type::simple, std::bit_cast<std::uint64_t>(v), false);
+      }
    }
 }
 

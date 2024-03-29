@@ -11,8 +11,8 @@
 #include <cbor/export.h>
 #include <cbor/type_traits.h>
 
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <optional>
 #include <type_traits>
@@ -137,10 +137,22 @@ enum class simple_type : std::uint8_t {
 };
 
 namespace detail {
-[[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, std::uint8_t argument);
-[[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, std::uint16_t argument);
-[[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, std::uint32_t argument);
-[[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, std::uint64_t argument);
+[[nodiscard]] std::error_code encode_argument(buffer &buf,
+                                              major_type type,
+                                              std::uint8_t argument,
+                                              bool compress = true);
+[[nodiscard]] std::error_code encode_argument(buffer &buf,
+                                              major_type type,
+                                              std::uint16_t argument,
+                                              bool compress = true);
+[[nodiscard]] std::error_code encode_argument(buffer &buf,
+                                              major_type type,
+                                              std::uint32_t argument,
+                                              bool compress = true);
+[[nodiscard]] std::error_code encode_argument(buffer &buf,
+                                              major_type type,
+                                              std::uint64_t argument,
+                                              bool compress = true);
 } // namespace detail
 
 ////////////////////////////////////////////////////////////////////////////////

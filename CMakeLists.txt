@@ -22,6 +22,15 @@ set(CBOR_DYNAMIC_BUFFER_INITIAL_SIZE 8 CACHE STRING "Initial amount of memory to
 file(MAKE_DIRECTORY ${CBOR_GENERATED_INCLUDE_DIR})
 configure_file(cmake/config.h.in ${CBOR_GENERATED_CONFIG_HEADER} @ONLY)
 
+# --- Dependencies --- #
+include(FetchContent)
+FetchContent_Declare(
+    fhf
+    GIT_REPOSITORY https://github.com/yowidin/fast-half-float
+    GIT_TAG v0.0.1
+)
+FetchContent_MakeAvailable(fhf)
+
 # --- Actual library --- #
 add_library(cbor
     src/library.cpp
@@ -37,6 +46,8 @@ target_include_directories(cbor
 
     PUBLIC $<INSTALL_INTERFACE:include>
 )
+
+target_link_libraries(cbor PUBLIC FastHalfFloat::library)
 
 set_target_properties(cbor PROPERTIES
     OUTPUT_NAME cbor
