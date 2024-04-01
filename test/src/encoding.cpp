@@ -12,6 +12,85 @@
 
 #include <iostream>
 
+struct foo {
+   std::int8_t a;
+   double b;
+   std::string c;
+};
+
+struct bar {
+   std::optional<int> a;
+   std::array<std::uint8_t, 4> b;
+};
+
+namespace cbor {
+
+template <>
+struct type_id<foo> : std::integral_constant<std::uint64_t, 0xBEEF> {};
+
+[[nodiscard]] std::error_code encode(buffer &buf, const foo &v) {
+   auto rollback_helper = buf.get_rollback_helper();
+
+   auto res = encode(buf, v.a);
+   if (res) {
+      return res;
+   }
+
+   res = encode(buf, v.b);
+   if (res) {
+      return res;
+   }
+
+   res = encode(buf, v.c);
+   if (res) {
+      return res;
+   }
+
+   rollback_helper.commit();
+
+   return res;
+}
+
+template <>
+struct type_id<bar> : std::integral_constant<std::uint64_t, 0xDEAF> {};
+
+[[nodiscard]] std::error_code encode(buffer &buf, const bar &v) {
+   auto rollback_helper = buf.get_rollback_helper();
+
+   auto res = encode(buf, v.a);
+   if (res) {
+      return res;
+   }
+
+   res = encode(buf, v.b);
+   if (res) {
+      return res;
+   }
+
+   rollback_helper.commit();
+
+   return res;
+}
+
+} // namespace cbor
+
+static_assert(cbor::type_id_v<foo> == 0xBEEF);
+static_assert(cbor::type_id_v<bar> == 0xDEAF);
+
+template <typename... T>
+   requires cbor::AllWithTypeID<T...>
+constexpr inline bool all_with_id() {
+   return true;
+}
+
+template <typename... T>
+constexpr inline bool all_with_id() {
+   return false;
+}
+
+static_assert(all_with_id<foo, bar>());
+static_assert(!all_with_id<foo, int>());
+
 using namespace cbor;
 
 template <typename T>
@@ -202,4 +281,26 @@ TEST_CASE("Floating Point", "[encoding]") {
    check_encoding(std::numeric_limits<double>::infinity(), {0xF9, 0x7C, 0x00});
    check_encoding(std::numeric_limits<double>::quiet_NaN(), {0xF9, 0x7E, 0x00});
    check_encoding(-std::numeric_limits<double>::infinity(), {0xF9, 0xFC, 0x00});
+}
+
+TEST_CASE("Variant", "[encoding]") {
+   using value_t = std::variant<foo, bar>;
+
+   value_t first = foo{.a = 1, .b = 0.0, .c = "a"};
+   const value_t second = bar{.a = std::nullopt, .b = {1, 2, 3, 4}};
+
+   check_encoding(first,
+                  {
+                     0x19, 0xBE, 0xEF, // Type ID
+                     0x01,             // a = 1
+                     0xF9, 0x00, 0x00, // b = 0.0
+                     0x61, 0x61        // c = "a"
+                  });
+
+   check_encoding(second,
+                  {
+                     0x19, 0xDE, 0xAF,             // Type ID
+                     0xF6,                         // a = nullopt
+                     0x44, 0x01, 0x02, 0x03, 0x04, // b = {1, 2, 3, 4}
+                  });
 }

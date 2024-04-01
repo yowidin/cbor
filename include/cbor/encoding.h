@@ -281,4 +281,49 @@ template <typename T>
 [[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, float v);
 [[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, double v);
 
+////////////////////////////////////////////////////////////////////////////////
+/// Variants
+////////////////////////////////////////////////////////////////////////////////
+template <typename T>
+concept Encodable = requires(const T &t) { encode(std::declval<cbor::buffer &>(), t); };
+
+template <typename... T>
+concept AllEncodable = (Encodable<T> && ...);
+
+/**
+ * Encode a variant.
+ *
+ * The encoding is prefixed with a type identifier, specified via a type_id template type specialization.
+ *
+ * This function intentionally doesn't support primitive variant types. It is intended to be used with structs and
+ * classes, because the primitive types:
+ * - Have explicit Type ID as part of the argument encoding.
+ * - Should not be used as a variant selector (a well-defined struct is almost always better in communicating intent).
+ *
+ * @tparam T variant types.
+ * @param buf Buffer to encode the value into.
+ * @param v Value to be encoded.
+ * @return Operation result.
+ */
+template <typename... T>
+   requires AllWithTypeID<T...> && AllEncodable<T...>
+[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const std::variant<T...> &v) {
+   auto rollback_helper = buf.get_rollback_helper();
+
+   const auto id = std::visit([](const auto &unwrapped) { return type_id_v<decltype(unwrapped)>; }, v);
+   auto res = encode(buf, id);
+   if (res) {
+      return res;
+   }
+
+   res = std::visit([&buf](const auto &unwrapped) { return encode(buf, unwrapped); }, v);
+   if (res) {
+      return res;
+   }
+
+   rollback_helper.commit();
+
+   return res;
+}
+
 } // namespace cbor
