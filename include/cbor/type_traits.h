@@ -40,6 +40,9 @@ concept UnsignedInt = std::is_unsigned_v<T> && std::is_integral_v<T> && !is_bool
 template <typename T>
 concept SignedInt = std::is_signed_v<T> && std::is_integral_v<T>;
 
+template <typename T>
+concept Enum = std::is_enum_v<T>;
+
 template <typename Target, typename Source>
 concept CopyableAs = std::is_same_v<Target, std::remove_cvref_t<Source>>;
 

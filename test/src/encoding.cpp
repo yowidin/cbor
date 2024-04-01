@@ -53,7 +53,7 @@ void encoding_helper(const T &value, std::initializer_list<std::uint8_t> expecte
    compare_arrays(value, target, expected);
 }
 
-TEST_CASE("Check argument encoding", "[encoding]") {
+TEST_CASE("Argument encoding", "[encoding]") {
    // Ensure that an unsigned int is encoded as the expected byte array
    auto check_encoding = [](auto value, std::initializer_list<std::uint8_t> expected) {
       encoding_helper<true>(value, expected);
@@ -72,7 +72,7 @@ TEST_CASE("Check argument encoding", "[encoding]") {
                   {0x1B, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF});
 }
 
-TEST_CASE("Check unsigned encoding", "[encoding]") {
+TEST_CASE("Unsigned", "[encoding]") {
    // Ensure that an unsigned int is encoded as the expected byte array
    auto check_encoding = [](auto value, std::initializer_list<std::uint8_t> expected) {
       encoding_helper<false>(value, expected);
@@ -91,7 +91,7 @@ TEST_CASE("Check unsigned encoding", "[encoding]") {
    check_encoding(std::numeric_limits<std::uint64_t>::max(), {0x1B, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF});
 }
 
-TEST_CASE("Check signed encoding", "[encoding]") {
+TEST_CASE("Signed", "[encoding]") {
    // Ensure that a signed int is encoded as the expected byte array
    auto check_encoding = [](auto value, std::initializer_list<std::uint8_t> expected) {
       encoding_helper<false>(value, expected);
@@ -105,7 +105,38 @@ TEST_CASE("Check signed encoding", "[encoding]") {
    check_encoding(std::numeric_limits<std::int64_t>::min(), {0x3B, 0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF});
 }
 
-TEST_CASE("Check array encoding", "[encoding]") {
+TEST_CASE("Enum", "[encoding]") {
+   // Ensure that an enumeration is encoded as the expected byte array
+   auto check_encoding = [](auto value, std::initializer_list<std::uint8_t> expected) {
+     encoding_helper<false>(value, expected);
+   };
+
+   enum class long_class : long {
+      a = -10,
+      b = 23,
+   };
+
+   enum long_simple : long {
+      ls_a = -10,
+      ls_b = 23,
+   };
+
+   enum class untyped {
+      a = -10,
+      b = 23,
+   };
+
+   check_encoding(long_class::a, {0x29});
+   check_encoding(long_class::b, {0x17});
+
+   check_encoding(untyped::a, {0x29});
+   check_encoding(untyped::b, {0x17});
+
+   check_encoding(ls_a, {0x29});
+   check_encoding(ls_b, {0x17});
+}
+
+TEST_CASE("Array", "[encoding]") {
    // Ensure that a signed int is encoded as the expected byte array
    auto check_encoding = [](std::initializer_list<std::uint8_t> value, std::initializer_list<std::uint8_t> expected) {
       encoding_helper<false>(value, expected);
@@ -115,7 +146,7 @@ TEST_CASE("Check array encoding", "[encoding]") {
    check_encoding({0x01, 0x02, 0x03, 0x04}, {0x44, 0x01, 0x02, 0x03, 0x04});
 }
 
-TEST_CASE("Check string encoding", "[encoding]") {
+TEST_CASE("String", "[encoding]") {
    // Ensure that strings are encoded as the expected byte array
    auto check_encoding = [](const auto &value, std::initializer_list<std::uint8_t> expected) {
       encoding_helper<false>(value, expected);
@@ -139,7 +170,7 @@ TEST_CASE("Check string encoding", "[encoding]") {
    check_encoding(decayed_char_array_2, {0x61, 0x61});
 }
 
-TEST_CASE("Check simple type encoding", "[encoding]") {
+TEST_CASE("Simple type", "[encoding]") {
    auto check_encoding = [](const auto &value, std::initializer_list<std::uint8_t> expected) {
       encoding_helper<false>(value, expected);
    };
@@ -149,7 +180,7 @@ TEST_CASE("Check simple type encoding", "[encoding]") {
    check_encoding(nullptr, {0xF6});
 }
 
-TEST_CASE("Check optional encoding", "[encoding]") {
+TEST_CASE("Optional", "[encoding]") {
    auto check_encoding = [](const auto &value, std::initializer_list<std::uint8_t> expected) {
       encoding_helper<false>(value, expected);
    };
@@ -161,7 +192,7 @@ TEST_CASE("Check optional encoding", "[encoding]") {
    check_encoding(std::optional<std::string>{"IETF"}, {0x64, 0x49, 0x45, 0x54, 0x46});
 }
 
-TEST_CASE("Check floating point encoding", "[encoding]") {
+TEST_CASE("Floating Point", "[encoding]") {
    auto check_encoding = [](const auto &value, std::initializer_list<std::uint8_t> expected) {
       encoding_helper<false>(value, expected);
    };
