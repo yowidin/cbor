@@ -33,8 +33,6 @@ FetchContent_MakeAvailable(fhf)
 
 # --- Actual library --- #
 add_library(cbor
-    src/library.cpp
-
     src/buffer.cpp
     src/encoding.cpp
     src/error.cpp

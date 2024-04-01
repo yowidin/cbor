@@ -21,7 +21,6 @@ FetchContent_MakeAvailable(shp)
 add_executable(cbor_tests
     src/buffer.cpp
     src/encoding.cpp
-    src/main.cpp
 )
 
 set_target_properties(cbor_tests PROPERTIES CXX_STANDARD 20)
