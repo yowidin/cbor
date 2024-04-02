@@ -99,14 +99,7 @@ void compare_arrays(T v, const std::vector<std::uint8_t> &res, const std::vector
 
    auto m = std::mismatch(std::begin(res), std::end(res), std::begin(expected));
    if (m.first != std::end(res) || m.second != std::end(expected)) {
-      std::cerr << "Array missmatch for ";
-      if constexpr (std::is_same_v<bool, T>) {
-         // SHP cannot handle booleans at the moment
-         std::cerr << '"' << std::boolalpha << v << std::noboolalpha << '"';
-      } else {
-         std::cerr << shp::hex(v);
-      }
-      std::cerr << ":\n"
+      std::cerr << "Array missmatch for " << shp::hex(v) << ":\n"
                 << "Expected:\n"
                 << shp::hex(expected) << "\n\nFound:\n"
                 << shp::hex(res) << std::endl;
