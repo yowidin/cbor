@@ -20,7 +20,12 @@ FetchContent_MakeAvailable(shp)
 
 add_executable(cbor_tests
     src/buffer.cpp
-    src/encoding.cpp
+
+    src/encoding/custom_encode.cpp
+    src/encoding/float.cpp
+    src/encoding/misc.cpp
+    src/encoding/reflection.cpp
+    src/encoding/variant.cpp
 )
 
 set_target_properties(cbor_tests PROPERTIES CXX_STANDARD 20)
@@ -30,5 +35,7 @@ target_link_libraries(cbor_tests
     PRIVATE Catch2::Catch2WithMain
     PRIVATE SimpleHexPrinter::library
 )
+
+target_include_directories(cbor_tests PRIVATE include)
 
 add_test(NAME Catch2Tests COMMAND "tests")

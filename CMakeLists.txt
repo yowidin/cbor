@@ -18,6 +18,7 @@ set(CBOR_GENERATED_EXPORT_HEADER "${CBOR_GENERATED_INCLUDE_DIR}/cbor/export.h")
 
 # --- Library options --- #
 set(CBOR_DYNAMIC_BUFFER_INITIAL_SIZE 8 CACHE STRING "Initial amount of memory to reserve for a dynamic buffer.")
+option(CBOR_WITH_BOOST_PFR "Use the Boost PFR for reflection" ON)
 
 file(MAKE_DIRECTORY ${CBOR_GENERATED_INCLUDE_DIR})
 configure_file(cmake/config.h.in ${CBOR_GENERATED_CONFIG_HEADER} @ONLY)
@@ -30,6 +31,16 @@ FetchContent_Declare(
     GIT_TAG v0.0.1
 )
 FetchContent_MakeAvailable(fhf)
+
+if(CBOR_WITH_BOOST_PFR)
+    FetchContent_Declare(
+        boost_pfr
+
+        GIT_REPOSITORY https://github.com/boostorg/pfr
+        GIT_TAG 2.2.0
+    )
+    FetchContent_MakeAvailable(boost_pfr)
+endif()
 
 # --- Actual library --- #
 add_library(cbor
@@ -45,7 +56,7 @@ target_include_directories(cbor
     PUBLIC $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(cbor PUBLIC FastHalfFloat::library)
+target_link_libraries(cbor PUBLIC FastHalfFloat::library $<$<BOOL:${CBOR_WITH_BOOST_PFR}>:Boost::pfr>)
 
 set_target_properties(cbor PROPERTIES
     OUTPUT_NAME cbor

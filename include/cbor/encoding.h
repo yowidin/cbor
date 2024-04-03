@@ -230,33 +230,7 @@ template <ConstByteArray T>
 ////////////////////////////////////////////////////////////////////////////////
 /// Strings
 ////////////////////////////////////////////////////////////////////////////////
-template <ConstTextArray T>
-[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const T &v) {
-   auto rollback_helper = buf.get_rollback_helper();
-
-   auto size = std::size(v);
-   if (size != 0) {
-      const char last_char = *(std::begin(v) + (size - 1));
-      if (last_char == '\0') {
-         size -= 1; // Skip the NULL-terminator
-      }
-   }
-
-   auto res = encode_argument(buf, major_type::text_string, size);
-   if (res) {
-      return res;
-   }
-
-   res = buf.write(buffer::const_span_t{reinterpret_cast<const std::uint8_t *>(&*std::cbegin(v)), size});
-   if (res) {
-      return res;
-   }
-
-   rollback_helper.commit();
-
-   return res;
-}
-
+[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, std::string_view v);
 [[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const char *v);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -320,6 +294,42 @@ template <typename... T>
    if (res) {
       return res;
    }
+
+   rollback_helper.commit();
+
+   return res;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Structs
+////////////////////////////////////////////////////////////////////////////////
+namespace detail {
+
+template <typename T>
+bool encode_member(buffer &buf, const T &v, std::error_code &ec) {
+   ec = encode(buf, v);
+   return ec == error::success;
+}
+
+template <typename T, std::size_t... Ns>
+std::error_code encode_all(buffer &buf, const T &v, std::index_sequence<Ns...>) {
+   std::error_code ec;
+   ((encode_member(buf, get_member<Ns>(v), ec)) && ...);
+   return ec;
+}
+} // namespace detail
+
+template <EncodableStruct T>
+[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const T &v) {
+   auto rollback_helper = buf.get_rollback_helper();
+
+   auto res = encode(buf, type_id_v<T>);
+   if (res) {
+      return res;
+   }
+
+   using member_idx_t = std::make_index_sequence<get_member_count<T>()>;
+   res = detail::encode_all(buf, v, member_idx_t{});
 
    rollback_helper.commit();
 

@@ -6,10 +6,16 @@
 
 #pragma once
 
+#include <cbor/config.h>
+
 #include <cstdint>
 #include <limits>
 #include <ranges>
 #include <type_traits>
+
+#if CBOR_WITH(BOOST_PFR)
+#include <boost/pfr.hpp>
+#endif
 
 namespace cbor {
 
@@ -118,5 +124,37 @@ concept WithTypeID = requires(T) {
 
 template <typename... T>
 concept AllWithTypeID = (WithTypeID<T> && ...);
+
+////////////////////////////////////////////////////////////////////////////////
+/// Structs
+////////////////////////////////////////////////////////////////////////////////
+#if CBOR_WITH(BOOST_PFR)
+template <typename T>
+   requires std::is_class_v<T> && WithTypeID<T>
+[[nodiscard]] consteval std::size_t get_member_count() {
+   return boost::pfr::tuple_size_v<T>;
+}
+
+template <std::size_t Idx, typename T>
+   requires std::is_class_v<T> && WithTypeID<T>
+[[nodiscard]] const auto &get_member(const T &v) {
+   return boost::pfr::get<Idx>(v);
+}
+
+#else
+template <typename T>
+   requires std::is_class_v<T>
+[[nodiscard]] consteval std::size_t get_member_count();
+
+template <std::size_t Idx, typename T>
+   requires std::is_class_v<T>
+[[nodiscard]] const auto &get_member(const T &v);
+#endif // CBOR_WITH(BOOST_PFR)
+
+template <class T>
+concept EncodableStruct = std::is_class_v<T> && requires(const T &t) {
+   { get_member_count<T>() } -> std::same_as<std::size_t>;
+   { get_member<0>(t) };
+};
 
 } // namespace cbor

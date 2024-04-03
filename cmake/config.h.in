@@ -2,6 +2,12 @@
 
 #include <cstdint>
 
+#cmakedefine01 CBOR_WITH_BOOST_PFR()
+
+// https://www.fluentcpp.com/2019/05/28/better-macros-better-flags/
+#define CBOR_WITH(X) CBOR_WITH_PRIVATE_DEFINITION_##X()
+#define CBOR_WITH_PRIVATE_DEFINITION_BOOST_PFR() CBOR_WITH_BOOST_PFR()
+
 namespace cbor {
 inline static constexpr std::size_t dynamic_buffer_initial_size = @CBOR_DYNAMIC_BUFFER_INITIAL_SIZE@;
-}
+} // namespace cbor
