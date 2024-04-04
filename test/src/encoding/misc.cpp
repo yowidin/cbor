@@ -78,12 +78,7 @@ TEST_CASE("Enum", "[encoding]") {
 TEST_CASE("Array", "[encoding]") {
    // Ensure that a signed int is encoded as the expected byte array
    auto check_encoding = [](std::initializer_list<std::uint8_t> value, std::initializer_list<std::uint8_t> expected) {
-      std::vector<std::byte> as_bytes{};
-      for (const auto b : value) {
-         as_bytes.push_back(std::byte{b});
-      }
-
-      ::check_encoding(as_bytes, expected);
+      ::check_encoding(std::as_bytes(std::span{value}), expected);
    };
 
    check_encoding({}, {0x40});

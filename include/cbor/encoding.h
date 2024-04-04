@@ -207,24 +207,7 @@ template <Enum T>
 ////////////////////////////////////////////////////////////////////////////////
 /// Byte Arrays
 ////////////////////////////////////////////////////////////////////////////////
-[[nodiscard]] inline CBOR_EXPORT std::error_code encode(buffer &buf, buffer::const_span_t v) {
-   auto rollback_helper = buf.get_rollback_helper();
-
-   const auto size = std::size(v);
-   auto res = encode_argument(buf, major_type::byte_string, size);
-   if (res) {
-      return res;
-   }
-
-   res = buf.write(buffer::const_span_t{std::cbegin(v), size});
-   if (res) {
-      return res;
-   }
-
-   rollback_helper.commit();
-
-   return res;
-}
+[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, buffer::const_span_t v);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Strings
