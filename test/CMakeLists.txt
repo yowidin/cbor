@@ -1,11 +1,13 @@
 include(CTest)
 
+set(CMAKE_CXX_STANDARD 20)
+
 Include(FetchContent)
-set(FETCHCONTENT_UPDATES_DISCONNECTED OFF)
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 FetchContent_Declare(
     Catch2
     GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-    GIT_TAG v3.5.2
+    GIT_TAG v3.5.3
 )
 FetchContent_MakeAvailable(Catch2)
 message(STATUS "Catch2: ${Catch2_SOURCE_DIR}")
@@ -27,8 +29,6 @@ add_executable(cbor_tests
     src/encoding/reflection.cpp
     src/encoding/variant.cpp
 )
-
-set_target_properties(cbor_tests PROPERTIES CXX_STANDARD 20)
 
 target_link_libraries(cbor_tests
     PRIVATE CBOR::library

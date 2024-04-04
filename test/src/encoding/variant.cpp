@@ -22,7 +22,7 @@ struct variant_a {
 
 struct variant_b {
    std::optional<int> a;
-   std::array<std::uint8_t, 4> b;
+   bool b;
 };
 
 namespace cbor {
@@ -99,7 +99,7 @@ TEST_CASE("Variant", "[encoding]") {
    using value_t = std::variant<variant_a, variant_b>;
 
    value_t first = variant_a{.a = 1, .b = 0.0, .c = "a"};
-   const value_t second = variant_b{.a = std::nullopt, .b = {1, 2, 3, 4}};
+   const value_t second = variant_b{.a = std::nullopt, .b = true};
 
    check_encoding(first,
                   {
@@ -111,8 +111,8 @@ TEST_CASE("Variant", "[encoding]") {
 
    check_encoding(second,
                   {
-                     0x19, 0xDE, 0xAF,             // Type ID
-                     0xF6,                         // a = nullopt
-                     0x44, 0x01, 0x02, 0x03, 0x04, // b = {1, 2, 3, 4}
+                     0x19, 0xDE, 0xAF, // Type ID
+                     0xF6,             // a = nullopt
+                     0xF5,             // b = true
                   });
 }

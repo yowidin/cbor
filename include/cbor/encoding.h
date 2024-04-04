@@ -207,8 +207,7 @@ template <Enum T>
 ////////////////////////////////////////////////////////////////////////////////
 /// Byte Arrays
 ////////////////////////////////////////////////////////////////////////////////
-template <ConstByteArray T>
-[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const T &v) {
+[[nodiscard]] inline CBOR_EXPORT std::error_code encode(buffer &buf, buffer::const_span_t v) {
    auto rollback_helper = buf.get_rollback_helper();
 
    const auto size = std::size(v);

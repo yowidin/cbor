@@ -21,8 +21,8 @@ namespace cbor {
 class CBOR_EXPORT buffer {
 public:
    using rollback_token_t = std::ptrdiff_t;
-   using span_t = std::span<std::uint8_t>;
-   using const_span_t = std::span<const std::uint8_t>;
+   using span_t = std::span<std::byte>;
+   using const_span_t = std::span<const std::byte>;
 
    class rollback_helper {
    public:
@@ -76,9 +76,9 @@ public:
    virtual ~buffer() = default;
 
 public:
-   [[nodiscard]] virtual std::error_code write(std::uint8_t v) { return write({v}); }
+   [[nodiscard]] virtual std::error_code write(std::byte v) { return write({v}); }
 
-   [[nodiscard]] virtual std::error_code write(std::initializer_list<std::uint8_t> v) {
+   [[nodiscard]] virtual std::error_code write(std::initializer_list<std::byte> v) {
       return write(const_span_t{v.begin(), v.end()});
    }
 
@@ -97,7 +97,7 @@ protected:
  */
 class CBOR_EXPORT dynamic_buffer final : public buffer {
 public:
-   using vector_t = std::vector<std::uint8_t>;
+   using vector_t = std::vector<std::byte>;
 
 public:
    explicit dynamic_buffer(vector_t &vec, std::size_t max_capacity = buffer::unlimited_capacity);

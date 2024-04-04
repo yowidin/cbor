@@ -12,15 +12,26 @@
 
 using namespace cbor;
 
+namespace {
+inline constexpr std::byte operator""_b(unsigned long long v) {
+   if (v > std::numeric_limits<std::uint8_t>::max()) {
+      // Dude, why?!
+      std::terminate();
+   }
+
+   return std::byte{static_cast<std::uint8_t>(v)};
+}
+} // namespace
+
 TEST_CASE("Dynamic buffer can grow", "[buffer]") {
-   std::vector<std::uint8_t> target{};
+   std::vector<std::byte> target{};
    dynamic_buffer buf{target};
 
    // Don't change the buffer if nothing is written
    REQUIRE(target.empty());
    REQUIRE(buf.size() == 0);
 
-   std::uint8_t bytes[] = {0xBE, 0xEF, 0xDE, 0xAD};
+   std::byte bytes[] = {0xBE_b, 0xEF_b, 0xDE_b, 0xAD_b};
 
    auto ensure_equality = [&]() {
       using namespace std;
@@ -43,7 +54,7 @@ TEST_CASE("Dynamic buffer can grow", "[buffer]") {
    }
 
    SECTION("local span") {
-      std::span<const std::uint8_t> span{bytes};
+      std::span<const std::byte> span{bytes};
       REQUIRE(!buf.write(span));
       ensure_equality();
    }
@@ -55,18 +66,18 @@ TEST_CASE("Dynamic buffer can grow", "[buffer]") {
 }
 
 TEST_CASE("Dynamic buffer size can be limited", "[buffer]") {
-   std::vector<std::uint8_t> target{};
+   std::vector<std::byte> target{};
    dynamic_buffer buf{target, 2};
 
    // Don't change the buffer if nothing is written
    REQUIRE(target.empty());
    REQUIRE(buf.size() == 0);
 
-   REQUIRE(!buf.write(42));
+   REQUIRE(!buf.write(42_b));
    REQUIRE(target.size() == 1);
-   REQUIRE(target[0] == 42);
+   REQUIRE(target[0] == 42_b);
 
-   std::uint8_t bytes[] = {0xBE, 0xEF, 0xDE, 0xAD};
+   std::byte bytes[] = {0xBE_b, 0xEF_b, 0xDE_b, 0xAD_b};
 
    SECTION("one byte") {
       std::error_code ec = buf.write(bytes[0]);
@@ -77,8 +88,8 @@ TEST_CASE("Dynamic buffer size can be limited", "[buffer]") {
       REQUIRE(ec == error::buffer_overflow);
 
       REQUIRE(target.size() == 2);
-      REQUIRE(target[0] == 42);
-      REQUIRE(target[1] == 0xBE);
+      REQUIRE(target[0] == 42_b);
+      REQUIRE(target[1] == 0xBE_b);
    }
 
    SECTION("initializer list") {
@@ -87,18 +98,18 @@ TEST_CASE("Dynamic buffer size can be limited", "[buffer]") {
       REQUIRE(ec == error::buffer_overflow);
 
       REQUIRE(target.size() == 1);
-      REQUIRE(target[0] == 42);
+      REQUIRE(target[0] == 42_b);
    }
 
    SECTION("local span") {
-      std::span<const std::uint8_t> span{bytes};
+      std::span<const std::byte> span{bytes};
       std::error_code ec = buf.write(span);
 
       REQUIRE(ec);
       REQUIRE(ec == error::buffer_overflow);
 
       REQUIRE(target.size() == 1);
-      REQUIRE(target[0] == 42);
+      REQUIRE(target[0] == 42_b);
    }
 
    SECTION("temporary span") {
@@ -108,22 +119,22 @@ TEST_CASE("Dynamic buffer size can be limited", "[buffer]") {
       REQUIRE(ec == error::buffer_overflow);
 
       REQUIRE(target.size() == 1);
-      REQUIRE(target[0] == 42);
+      REQUIRE(target[0] == 42_b);
    }
 }
 
 TEST_CASE("Static buffer size is limited", "[buffer]") {
-   std::array<std::uint8_t, 2> target{};
+   std::array<std::byte, 2> target{};
    static_buffer buf{target};
 
    // Don't change the buffer if nothing is written
    REQUIRE(buf.size() == 0);
 
-   REQUIRE(!buf.write(42));
+   REQUIRE(!buf.write(42_b));
    REQUIRE(buf.size() == 1);
-   REQUIRE(target[0] == 42);
+   REQUIRE(target[0] == 42_b);
 
-   std::uint8_t bytes[] = {0xBE, 0xEF, 0xDE, 0xAD};
+   std::byte bytes[] = {0xBE_b, 0xEF_b, 0xDE_b, 0xAD_b};
 
    SECTION("one byte") {
       std::error_code ec = buf.write(bytes[0]);
@@ -134,8 +145,8 @@ TEST_CASE("Static buffer size is limited", "[buffer]") {
       REQUIRE(ec == error::buffer_overflow);
 
       REQUIRE(buf.size() == 2);
-      REQUIRE(target[0] == 42);
-      REQUIRE(target[1] == 0xBE);
+      REQUIRE(target[0] == 42_b);
+      REQUIRE(target[1] == 0xBE_b);
    }
 
    SECTION("initializer list") {
@@ -144,18 +155,18 @@ TEST_CASE("Static buffer size is limited", "[buffer]") {
       REQUIRE(ec == error::buffer_overflow);
 
       REQUIRE(buf.size() == 1);
-      REQUIRE(target[0] == 42);
+      REQUIRE(target[0] == 42_b);
    }
 
    SECTION("local span") {
-      std::span<const std::uint8_t> span{bytes};
+      std::span<const std::byte> span{bytes};
       std::error_code ec = buf.write(span);
 
       REQUIRE(ec);
       REQUIRE(ec == error::buffer_overflow);
 
       REQUIRE(buf.size() == 1);
-      REQUIRE(target[0] == 42);
+      REQUIRE(target[0] == 42_b);
    }
 
    SECTION("temporary span") {
@@ -165,6 +176,6 @@ TEST_CASE("Static buffer size is limited", "[buffer]") {
       REQUIRE(ec == error::buffer_overflow);
 
       REQUIRE(buf.size() == 1);
-      REQUIRE(target[0] == 42);
+      REQUIRE(target[0] == 42_b);
    }
 }

@@ -21,16 +21,28 @@ inline constexpr uint16_t ONE_EXTRA_BYTE_VALUE_LIMIT = 0xFFU;
 inline constexpr uint32_t TWO_EXTRA_BYTES_VALUE_LIMIT = 0xFFFFU;
 inline constexpr uint64_t FOUR_EXTRA_BYTES_VALUE_LIMIT = 0xFFFFFFFFU;
 
-inline std::uint8_t operator|(major_type m, argument_size s) {
-   const auto lhs = static_cast<std::underlying_type_t<major_type>>(m);
-   const auto rhs = static_cast<std::underlying_type_t<argument_size>>(s);
+inline constexpr std::byte operator""_b(unsigned long long v) {
+   if (v > std::numeric_limits<std::uint8_t>::max()) {
+      // Dude, why?!
+      std::terminate();
+   }
+   return std::byte{static_cast<std::uint8_t>(v)};
+}
+
+inline std::byte operator|(major_type m, argument_size s) {
+   const auto lhs = static_cast<std::byte>(m);
+   const auto rhs = static_cast<std::byte>(s);
    return lhs | rhs;
 }
 
-inline std::uint8_t operator|(major_type m, simple_type s) {
-   const auto lhs = static_cast<std::underlying_type_t<major_type>>(m);
-   const auto rhs = static_cast<std::underlying_type_t<simple_type>>(s);
+inline std::byte operator|(major_type m, simple_type s) {
+   const auto lhs = static_cast<std::byte>(m);
+   const auto rhs = static_cast<std::byte>(s);
    return lhs | rhs;
+}
+
+inline std::byte operator|(std::byte b, std::uint8_t v) {
+   return b | std::byte{v};
 }
 
 std::error_code encode_argument(buffer &buf, major_type type, std::uint8_t v, bool compress) {
@@ -40,7 +52,7 @@ std::error_code encode_argument(buffer &buf, major_type type, std::uint8_t v, bo
       return buf.write(value);
    }
 
-   return buf.write({type | argument_size::one_byte, v});
+   return buf.write({type | argument_size::one_byte, std::byte{v}});
 }
 
 std::error_code encode_argument(buffer &buf, major_type type, std::uint16_t v, bool compress) {
@@ -48,8 +60,8 @@ std::error_code encode_argument(buffer &buf, major_type type, std::uint16_t v, b
       return encode_argument(buf, type, static_cast<std::uint8_t>(v), compress);
    }
 
-   const auto b0 = static_cast<uint8_t>((v >> 8U) & 0xFFU);
-   const auto b1 = static_cast<uint8_t>((v) & 0xFFU);
+   const auto b0 = static_cast<std::byte>((v >> 8U) & 0xFFU);
+   const auto b1 = static_cast<std::byte>((v) & 0xFFU);
 
    return buf.write({type | argument_size::two_bytes, b0, b1});
 }
@@ -63,10 +75,10 @@ std::error_code encode_argument(buffer &buf, major_type type, std::uint32_t v, b
       return encode_argument(buf, type, static_cast<std::uint16_t>(v), compress);
    }
 
-   const auto b0 = static_cast<uint8_t>((v >> 24U) & 0xFFU);
-   const auto b1 = static_cast<uint8_t>((v >> 16U) & 0xFFU);
-   const auto b2 = static_cast<uint8_t>((v >> 8U) & 0xFFU);
-   const auto b3 = static_cast<uint8_t>((v) & 0xFFU);
+   const auto b0 = static_cast<std::byte>((v >> 24U) & 0xFFU);
+   const auto b1 = static_cast<std::byte>((v >> 16U) & 0xFFU);
+   const auto b2 = static_cast<std::byte>((v >> 8U) & 0xFFU);
+   const auto b3 = static_cast<std::byte>((v) & 0xFFU);
 
    return buf.write({type | argument_size::four_bytes, b0, b1, b2, b3});
 }
@@ -84,14 +96,14 @@ std::error_code encode_argument(buffer &buf, major_type type, std::uint64_t v, b
       return encode_argument(buf, type, static_cast<std::uint32_t>(v), compress);
    }
 
-   const auto b0 = static_cast<uint8_t>((v >> 56U) & 0xFFU);
-   const auto b1 = static_cast<uint8_t>((v >> 48U) & 0xFFU);
-   const auto b2 = static_cast<uint8_t>((v >> 40U) & 0xFFU);
-   const auto b3 = static_cast<uint8_t>((v >> 32U) & 0xFFU);
-   const auto b4 = static_cast<uint8_t>((v >> 24U) & 0xFFU);
-   const auto b5 = static_cast<uint8_t>((v >> 16U) & 0xFFU);
-   const auto b6 = static_cast<uint8_t>((v >> 8U) & 0xFFU);
-   const auto b7 = static_cast<uint8_t>((v) & 0xFFU);
+   const auto b0 = static_cast<std::byte>((v >> 56U) & 0xFFU);
+   const auto b1 = static_cast<std::byte>((v >> 48U) & 0xFFU);
+   const auto b2 = static_cast<std::byte>((v >> 40U) & 0xFFU);
+   const auto b3 = static_cast<std::byte>((v >> 32U) & 0xFFU);
+   const auto b4 = static_cast<std::byte>((v >> 24U) & 0xFFU);
+   const auto b5 = static_cast<std::byte>((v >> 16U) & 0xFFU);
+   const auto b6 = static_cast<std::byte>((v >> 8U) & 0xFFU);
+   const auto b7 = static_cast<std::byte>((v) & 0xFFU);
 
    return buf.write({type | argument_size::eight_bytes, b0, b1, b2, b3, b4, b5, b6, b7});
 }
@@ -117,7 +129,7 @@ std::error_code encode_argument(buffer &buf, major_type type, std::uint64_t v, b
       return res;
    }
 
-   res = buf.write(buffer::const_span_t{reinterpret_cast<const std::uint8_t *>(&*std::cbegin(v)), size});
+   res = buf.write(buffer::const_span_t{reinterpret_cast<const std::byte *>(&*std::cbegin(v)), size});
    if (res) {
       return res;
    }
@@ -160,13 +172,13 @@ std::error_code encode(buffer &buf, float v) {
    switch (value_type) {
       case FP_NAN:
          // Always use deterministic encoding - the smallest possible float for NAN
-         return buf.write({major_type::simple | simple_type::hp_float, 0x7E, 0x00});
+         return buf.write({major_type::simple | simple_type::hp_float, 0x7E_b, 0x00_b});
       case FP_INFINITE:
          // Always use deterministic encoding - the smallest possible float for INF and -INF
          if (v > 0) {
-            return buf.write({major_type::simple | simple_type::hp_float, 0x7C, 0x00});
+            return buf.write({major_type::simple | simple_type::hp_float, 0x7C_b, 0x00_b});
          } else {
-            return buf.write({major_type::simple | simple_type::hp_float, 0xFC, 0x00});
+            return buf.write({major_type::simple | simple_type::hp_float, 0xFC_b, 0x00_b});
          }
       default: {
          // Floats require all bytes to be present (no compression is allowed), thus the last argument to
@@ -194,13 +206,13 @@ std::error_code encode(buffer &buf, double v) {
    switch (value_type) {
       case FP_NAN:
          // Always use deterministic encoding - the smallest possible float for NAN
-         return buf.write({major_type::simple | simple_type::hp_float, 0x7E, 0x00});
+         return buf.write({major_type::simple | simple_type::hp_float, 0x7E_b, 0x00_b});
       case FP_INFINITE:
          // Always use deterministic encoding - the smallest possible float for INF and -INF
          if (v > 0) {
-            return buf.write({major_type::simple | simple_type::hp_float, 0x7C, 0x00});
+            return buf.write({major_type::simple | simple_type::hp_float, 0x7C_b, 0x00_b});
          } else {
-            return buf.write({major_type::simple | simple_type::hp_float, 0xFC, 0x00});
+            return buf.write({major_type::simple | simple_type::hp_float, 0xFC_b, 0x00_b});
          }
       default: {
          // Floats require all bytes to be present (no compression is allowed), thus the last argument to
