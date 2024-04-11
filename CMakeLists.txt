@@ -33,6 +33,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(fhf)
 
 if(CBOR_WITH_BOOST_PFR)
+    message(STATUS "Boost PFR is enabled. See limitations: https://www.boost.org/doc/libs/develop/doc/html/boost_pfr/limitations_and_configuration.html")
     FetchContent_Declare(
         boost_pfr
 

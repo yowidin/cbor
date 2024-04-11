@@ -247,9 +247,8 @@ template <typename... T>
 concept AllEncodable = (Encodable<T> && ...);
 
 /**
- * Encode a variant.
- *
- * The encoding is prefixed with a type identifier, specified via a type_id template type specialization.
+ * Encode a boxed variant: the encoding is prefixed with a type identifier, specified via a type_id template type
+ * specialization.
  *
  * This function intentionally doesn't support primitive variant types. It is intended to be used with structs and
  * classes, because the primitive types:
@@ -312,6 +311,32 @@ template <EncodableStruct T>
 
    using member_idx_t = std::make_index_sequence<get_member_count<T>()>;
    res = detail::encode_all(buf, v, member_idx_t{});
+
+   rollback_helper.commit();
+
+   return res;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Arrays
+////////////////////////////////////////////////////////////////////////////////
+template <typename T, std::size_t Extent>
+   requires Encodable<T>
+[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, std::span<T, Extent> v) {
+   auto rollback_helper = buf.get_rollback_helper();
+
+   const auto size = v.size();
+   auto res = encode_argument(buf, major_type::array, size);
+   if (res) {
+      return res;
+   }
+
+   for (const auto &e : v) {
+      res = encode(buf, e);
+      if (res) {
+         return res;
+      }
+   }
 
    rollback_helper.commit();
 
