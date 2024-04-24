@@ -128,31 +128,31 @@ concept AllWithTypeID = (WithTypeID<T> && ...);
 ////////////////////////////////////////////////////////////////////////////////
 /// Structs
 ////////////////////////////////////////////////////////////////////////////////
-#if CBOR_WITH(BOOST_PFR)
+//! Treat structs with either a type_id specialization, or explicitly enabled CBOR encoding as whitelisted.
 template <typename T>
-   requires std::is_class_v<T> && WithTypeID<T>
+concept WhitelistedStruct = std::is_class_v<T> && (WithTypeID<T> || requires(T e) { enable_cbor_encoding(e); });
+
+#if CBOR_WITH(BOOST_PFR)
+template <WhitelistedStruct T>
 [[nodiscard]] consteval std::size_t get_member_count() {
    return boost::pfr::tuple_size_v<T>;
 }
 
-template <std::size_t Idx, typename T>
-   requires std::is_class_v<T> && WithTypeID<T>
+template <std::size_t Idx, WhitelistedStruct T>
 [[nodiscard]] const auto &get_member(const T &v) {
    return boost::pfr::get<Idx>(v);
 }
 
 #else
-template <typename T>
-   requires std::is_class_v<T>
+template <WhitelistedStruct T>
 [[nodiscard]] consteval std::size_t get_member_count();
 
-template <std::size_t Idx, typename T>
-   requires std::is_class_v<T>
+template <std::size_t Idx, WhitelistedStruct T>
 [[nodiscard]] const auto &get_member(const T &v);
 #endif // CBOR_WITH(BOOST_PFR)
 
-template <class T>
-concept EncodableStruct = std::is_class_v<T> && requires(const T &t) {
+template <typename T>
+concept EncodableStruct = WhitelistedStruct<T> && requires(T t) {
    { get_member_count<T>() } -> std::same_as<std::size_t>;
    { get_member<0>(t) };
 };

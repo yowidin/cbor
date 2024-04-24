@@ -22,9 +22,6 @@ struct custom_encode {
 
 namespace cbor {
 
-template <>
-struct type_id<custom_encode> : std::integral_constant<std::uint64_t, 0xBEEF> {};
-
 [[nodiscard]] std::error_code encode(buffer &buf, const custom_encode &v) {
    auto rollback_helper = buf.get_rollback_helper();
 
@@ -50,14 +47,11 @@ struct type_id<custom_encode> : std::integral_constant<std::uint64_t, 0xBEEF> {}
 
 } // namespace cbor
 
-static_assert(cbor::type_id_v<custom_encode> == 0xBEEF);
-
 using namespace test;
 
 TEST_CASE("User-provided encode", "[encoding]") {
    check_encoding(custom_encode{.a = 1, .b = 0.0, .c = "a"},
                   {
-                     0x19, 0xBE, 0xEF, // Type ID
                      0x01,             // a = 1
                      0xF9, 0x00, 0x00, // b = 0.0
                      0x61, 0x61        // c = "a"

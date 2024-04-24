@@ -38,11 +38,13 @@ void compare_arrays(T v, const std::vector<std::byte> &res, const std::vector<st
 
 template <typename T>
 void check_encoding(const T &value, std::initializer_list<std::uint8_t> expected) {
+   using namespace cbor;
+
    std::vector<std::byte> target{};
    cbor::dynamic_buffer buf{target};
 
    std::error_code res;
-   res = cbor::encode(buf, value);
+   res = encode(buf, value);
 
    REQUIRE(!res);
 
