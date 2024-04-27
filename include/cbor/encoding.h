@@ -215,6 +215,11 @@ template <Enum T>
 [[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, std::string_view v);
 [[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const char *v);
 
+template <typename CharT, typename Traits, typename Allocator>
+[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const std::basic_string<CharT, Traits, Allocator> &v) {
+   return encode(buf, std::string_view{v});
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Simple Types
 ////////////////////////////////////////////////////////////////////////////////
@@ -339,6 +344,18 @@ template <typename T, std::size_t Extent>
    rollback_helper.commit();
 
    return res;
+}
+
+template <typename T, std::size_t Extent>
+   requires Encodable<T>
+[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const std::array<T, Extent> &v) {
+   return encode(buf, std::span{v});
+}
+
+template <typename T, typename Allocator>
+   requires Encodable<T>
+[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const std::vector<T, Allocator> &v) {
+   return encode(buf, std::span{v});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -24,6 +24,9 @@ struct pfr_via_type_id {
 
 struct pfr_via_consteval {
    int a, b;
+
+   std::array<int, 2> int_array;
+   std::vector<int> int_vec;
 };
 
 [[maybe_unused]] consteval void enable_cbor_encoding(pfr_via_consteval);
@@ -31,6 +34,9 @@ struct pfr_via_consteval {
 
 struct custom_reflection {
    int a, b;
+
+   std::array<int, 2> int_array;
+   std::vector<int> int_vec;
 };
 
 [[maybe_unused]] consteval void enable_cbor_encoding(custom_reflection);
@@ -43,7 +49,7 @@ struct cbor::type_id<pfr_via_type_id> : std::integral_constant<std::uint64_t, 0x
 
 template <>
 consteval std::size_t cbor::get_member_count<custom_reflection>() {
-   return 2;
+   return 4;
 }
 
 template <>
@@ -56,16 +62,26 @@ const auto &cbor::get_member<1>(const custom_reflection &v) {
    return v.b;
 }
 
+template <>
+const auto &cbor::get_member<2>(const custom_reflection &v) {
+   return v.int_array;
+}
+
+template <>
+const auto &cbor::get_member<3>(const custom_reflection &v) {
+   return v.int_vec;
+}
+
 #if CBOR_WITH(BOOST_PFR)
 TEST_CASE("Reflection PFR", "[encoding]") {
    // Defining a type_id overload should be enough to whitelist a struct with PFR
    check_encoding(pfr_via_type_id{10, 20}, {0x0A, 0x14});
 
    // Defining a consteval function should be enough to whitelist a struct with PFR
-   check_encoding(pfr_via_consteval{5, 7}, {0x05, 0x07});
+   check_encoding(pfr_via_consteval{5, 7, {1, 2}, {3, 4}}, {0x05, 0x07, 0x82, 0x01, 0x02, 0x82, 0x03, 0x04});
 }
 #endif // CBOR_WITH(BOOST_PFR)
 
 TEST_CASE("Reflection custom", "[encoding]") {
-   check_encoding(custom_reflection{10, 20}, {0x0A, 0x14});
+   check_encoding(custom_reflection{10, 20, {1, 2}, {3, 4}}, {0x0A, 0x14, 0x82, 0x01, 0x02, 0x82, 0x03, 0x04});
 }
