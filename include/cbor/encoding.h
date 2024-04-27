@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <map>
 #include <optional>
 #include <type_traits>
 
@@ -412,6 +413,38 @@ template <typename T>
    res = encode(buf, v.v);
    if (res) {
       return res;
+   }
+
+   rollback_helper.commit();
+
+   return res;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Dictionaries
+////////////////////////////////////////////////////////////////////////////////
+template <Encodable Key, Encodable T, typename Compare, typename Allocator>
+[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const std::map<Key, T, Compare, Allocator> &v) {
+   auto rollback_helper = buf.get_rollback_helper();
+
+   // Encode size
+   const auto size = std::size(v);
+   auto res = encode_argument(buf, major_type::dictionary, size);
+   if (res) {
+      return res;
+   }
+
+   // Encode values
+   for (const auto &[key, value] : v) {
+      res = encode(buf, key);
+      if (res) {
+         return res;
+      }
+
+      res = encode(buf, value);
+      if (res) {
+         return res;
+      }
    }
 
    rollback_helper.commit();

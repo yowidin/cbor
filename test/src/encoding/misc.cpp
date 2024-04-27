@@ -117,3 +117,26 @@ TEST_CASE("Optional", "[encoding]") {
    check_encoding(std::optional<std::string>{}, {0xF6});
    check_encoding(std::optional<std::string>{"IETF"}, {0x64, 0x49, 0x45, 0x54, 0x46});
 }
+
+TEST_CASE("Dictionary", "[encoding]") {
+   using namespace std;
+
+   // {1: "1", 2: "22"}
+   check_encoding(
+      map<int, string>{
+         {1, "1"},
+         {2, "22"},
+      },
+      {0xA2, 0x01, 0x61, 0x31, 0x02, 0x62, 0x32, 0x32});
+
+   // {}
+   check_encoding(map<int, int>{}, {0xA0});
+
+   // {1: 2, 3: 4}
+   check_encoding(map<int, int>{{1, 2}, {3, 4}}, {0xA2, 0x01, 0x02, 0x03, 0x04});
+
+   // {"a": "A", "b": "B", "c": "C", "d": "D", "e": "E"}
+   check_encoding(map<string, string>{{"a", "A"}, {"b", "B"}, {"c", "C"}, {"d", "D"}, {"e", "E"}},
+                  {0xA5, 0x61, 0x61, 0x61, 0x41, 0x61, 0x62, 0x61, 0x42, 0x61, 0x63,
+                   0x61, 0x43, 0x61, 0x64, 0x61, 0x44, 0x61, 0x65, 0x61, 0x45});
+}
