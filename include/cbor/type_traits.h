@@ -84,39 +84,6 @@ concept Int = UnsignedInt<T> || SignedInt<T>;
 template <typename T>
 concept Enum = std::is_enum_v<T>;
 
-template <typename Target, typename Source>
-concept CopyableAs = std::is_same_v<Target, std::remove_cvref_t<Source>>;
-
-template <typename Source>
-concept CopyableAsU8 = CopyableAs<std::uint8_t, Source>;
-
-template <typename Source>
-concept CopyableAsChar = CopyableAs<char, Source>;
-
-template <class T>
-concept ConstByteArray = std::ranges::contiguous_range<T> && requires(const T &t) {
-   { *std::cbegin(t) } -> CopyableAsU8;
-   { std::size(t) } -> std::convertible_to<std::size_t>;
-};
-
-template <class T>
-concept ByteArray = std::ranges::contiguous_range<T> && requires(T &t) {
-   { *std::begin(t) } -> std::same_as<std::uint8_t &>;
-   { std::size(t) } -> std::convertible_to<std::size_t>;
-};
-
-template <class T>
-concept ConstTextArray = std::ranges::contiguous_range<T> && requires(T &t) {
-   { *std::begin(t) } -> CopyableAsChar;
-   { std::size(t) } -> std::convertible_to<std::size_t>;
-};
-
-template <class T>
-concept TextArray = std::ranges::contiguous_range<T> && requires(T &t) {
-   { *std::begin(t) } -> std::same_as<char &>;
-   { std::size(t) } -> std::convertible_to<std::size_t>;
-};
-
 template <typename T>
 concept WithTypeID = requires(T) {
    { type_id<std::remove_cvref_t<T>>::value } -> Int;
