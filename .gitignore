@@ -18,3 +18,5 @@ build/
 tags
 .clang_complete
 .gcc-flags.json
+
+CMakeUserPresets.json
