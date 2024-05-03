@@ -62,6 +62,24 @@
       "cacheVariables": {
         "CBOR_WITH_BOOST_PFR": false
       }
+    },
+    {
+      "name": "gcc-coverage",
+      "inherits": "default",
+      "description": "GCC-based coverage",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "--coverage",
+        "CMAKE_C_FLAGS": "--coverage"
+      }
+    },
+    {
+      "name": "clang-coverage",
+      "inherits": "default",
+      "description": "CLang-based coverage",
+      "cacheVariables": {
+        "CMAKE_CXX_FLAGS": "-fprofile-instr-generate -fcoverage-mapping",
+        "CMAKE_C_FLAGS": "-fprofile-instr-generate -fcoverage-mapping"
+      }
     }
   ],
   "buildPresets": [
@@ -84,6 +102,14 @@
     {
       "name": "no-reflection",
       "configurePreset": "no-reflection"
+    },
+    {
+      "name": "gcc-coverage",
+      "configurePreset": "gcc-coverage"
+    },
+    {
+      "name": "clang-coverage",
+      "configurePreset": "clang-coverage"
     }
   ],
   "testPresets": [
@@ -112,6 +138,16 @@
       "name": "no-reflection",
       "inherits": "default",
       "configurePreset": "no-reflection"
+    },
+    {
+      "name": "gcc-coverage",
+      "inherits": "default",
+      "configurePreset": "gcc-coverage"
+    },
+    {
+      "name": "clang-coverage",
+      "inherits": "default",
+      "configurePreset": "clang-coverage"
     }
   ]
 }
