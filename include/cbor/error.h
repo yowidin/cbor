@@ -30,6 +30,12 @@ enum class error {
 
    //! The provided value cannot be represented in CBOR (by this library)
    value_not_representable,
+
+   //! Invalid library usage
+   invalid_usage,
+
+   //! Encountered an unexpected type while decoding
+   unexpected_type,
 };
 
 const std::error_category &cbor_category() noexcept CBOR_EXPORT;

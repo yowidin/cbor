@@ -179,3 +179,107 @@ TEST_CASE("Static buffer size is limited", "[buffer]") {
       REQUIRE(target[0] == 42_b);
    }
 }
+
+TEST_CASE("Read buffer - NULL-source is allowed", "[buffer, read_buffer]") {
+   const buffer::const_span_t src{};
+
+   read_buffer buf{src};
+   REQUIRE(buf.read_position() == 0);
+
+   SECTION("Read byte") {
+      std::byte b;
+      std::error_code ec;
+
+      REQUIRE_NOTHROW(ec = buf.read(b));
+      REQUIRE(ec);
+      REQUIRE(ec == error::invalid_usage);
+      REQUIRE(buf.read_position() == 0);
+   }
+
+   SECTION("Read span") {
+      std::array<std::byte, 4> target_buffer{};
+      buffer::span_t target{target_buffer};
+      std::error_code ec;
+
+      REQUIRE_NOTHROW(ec = buf.read(target));
+      REQUIRE(ec);
+      REQUIRE(ec == error::invalid_usage);
+      REQUIRE(buf.read_position() == 0);
+   }
+}
+
+TEST_CASE("Read buffer - reading", "[buffer, read_buffer]") {
+   const std::array<std::byte, 4> source_buffer{0x01_b, 0x02_b, 0x03_b, 0x04_b};
+   const buffer::const_span_t src{source_buffer};
+
+   read_buffer buf{src};
+   REQUIRE(buf.read_position() == 0);
+
+   SECTION("Read byte") {
+      std::byte b;
+      std::error_code ec;
+
+      // Normal read
+      for (auto i = 0; i < source_buffer.size(); ++i) {
+         REQUIRE(buf.read_position() == i);
+
+         REQUIRE_NOTHROW(ec = buf.read(b));
+         REQUIRE(!ec);
+         REQUIRE(ec == error::success);
+         REQUIRE(b == source_buffer[i]);
+
+         REQUIRE(buf.read_position() == i + 1);
+      }
+
+      // Buffer underflow
+      REQUIRE_NOTHROW(ec = buf.read(b));
+      REQUIRE(ec);
+      REQUIRE(ec == error::buffer_underflow);
+      REQUIRE(buf.read_position() == source_buffer.size());
+   }
+
+   SECTION("Empty target span") {
+      buffer::span_t target{};
+      std::error_code ec;
+
+      // Read the middle chunk
+      REQUIRE_NOTHROW(ec = buf.read(target));
+      REQUIRE(ec);
+      REQUIRE(ec == error::invalid_usage);
+   }
+
+   SECTION("Read span") {
+      std::array<std::byte, 2> target_buffer{};
+      buffer::span_t target{target_buffer};
+      std::error_code ec;
+      std::byte b;
+
+      // Offset the read position by one byte - we want to read from the middle of the buffer
+      REQUIRE_NOTHROW(ec = buf.read(b));
+      REQUIRE(!ec);
+      REQUIRE(ec == error::success);
+      REQUIRE(b == source_buffer[0]);
+      REQUIRE(buf.read_position() == 1);
+
+      // Read the middle chunk
+      REQUIRE_NOTHROW(ec = buf.read(target));
+      REQUIRE(!ec);
+      REQUIRE(ec == error::success);
+      REQUIRE(buf.read_position() == 1 + target_buffer.size());
+
+      auto ensure_equality = [&](auto begin, auto end) {
+         auto tmp = mismatch(std::begin(target_buffer), std::end(target_buffer), begin);
+         REQUIRE(tmp.first == std::end(target_buffer));
+         REQUIRE(tmp.second == end);
+      };
+
+      // Make sure the middle is readout
+      ensure_equality(std::begin(source_buffer) + 1, std::begin(source_buffer) + target_buffer.size() + 1);
+
+      // Try reading more, than source buffer can provide
+      REQUIRE_NOTHROW(ec = buf.read(target));
+      REQUIRE(ec);
+      REQUIRE(ec == error::buffer_underflow);
+      REQUIRE(buf.read_position() == 1 + target_buffer.size());
+   }
+}

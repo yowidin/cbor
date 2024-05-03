@@ -40,6 +40,12 @@ std::string cbor_error_category::message(int ev) const {
       case error::value_not_representable:
          return "value cannot be represented in CBOR";
 
+      case error::invalid_usage:
+         return "invalid library usage";
+
+      case error::unexpected_type:
+         return "unexpected type while decoding";
+
       default:
          return "(unrecognized error)";
    }

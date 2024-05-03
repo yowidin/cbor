@@ -15,6 +15,9 @@
 
 namespace cbor {
 
+////////////////////////////////////////////////////////////////////////////////
+/// Class: buffer
+////////////////////////////////////////////////////////////////////////////////
 /**
  * Base buffer class, provides functions for low-level buffer manipulations.
  */
@@ -92,6 +95,9 @@ protected:
    virtual void rollback_nested_write(rollback_token_t token) = 0;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// Class: dynamic_buffer
+////////////////////////////////////////////////////////////////////////////////
 /**
  * Dynamic buffer - buffer type that can grow up to an optional limit.
  */
@@ -127,6 +133,9 @@ private:
    std::size_t max_capacity_;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// Class: static_buffer
+////////////////////////////////////////////////////////////////////////////////
 /**
  * Static buffer - buffer with a fixed size.
  */
@@ -157,6 +166,34 @@ private:
 private:
    span_t span_;
    std::ptrdiff_t data_size_{0};
+};
+
+////////////////////////////////////////////////////////////////////////////////
+/// Class: read_buffer
+////////////////////////////////////////////////////////////////////////////////
+/**
+ * Read buffer - container holding a decode buffer.
+ */
+class CBOR_EXPORT read_buffer final {
+public:
+   read_buffer(buffer::const_span_t span);
+
+   read_buffer(const read_buffer &) = delete;
+   read_buffer(read_buffer &&) = default;
+
+public:
+   read_buffer &operator=(const read_buffer &) = delete;
+   read_buffer &operator=(read_buffer &&) = default;
+
+public:
+   [[nodiscard]] std::error_code read(std::byte &v);
+   [[nodiscard]] std::error_code read(buffer::span_t v);
+
+   [[nodiscard]] std::ptrdiff_t read_position() const { return read_position_; }
+
+private:
+   buffer::const_span_t span_;
+   std::ptrdiff_t read_position_{0};
 };
 
 } // namespace cbor

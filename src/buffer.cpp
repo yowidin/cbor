@@ -97,3 +97,48 @@ std::error_code static_buffer::ensure_capacity(std::size_t num_bytes) {
 
    return error::buffer_overflow;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Class: read_buffer
+////////////////////////////////////////////////////////////////////////////////
+read_buffer::read_buffer(buffer::const_span_t span)
+   : span_{span} {
+   // Nothing to do here
+}
+
+std::error_code read_buffer::read(std::byte &v) {
+   if (!span_.data()) {
+      return error::invalid_usage;
+   }
+
+   if (span_.size() - read_position_ <= 0) {
+      return error::buffer_underflow;
+   }
+
+   v = span_[read_position_++];
+
+   return error::success;
+}
+
+std::error_code read_buffer::read(buffer::span_t v) {
+   if (!span_.data()) {
+      return error::invalid_usage;
+   }
+
+   if (!v.data()) {
+      return error::invalid_usage;
+   }
+
+   if (span_.size() - read_position_ < v.size()) {
+      return error::buffer_underflow;
+   }
+
+   using diff_t = std::iterator_traits<buffer::const_span_t::iterator>::difference_type;
+   auto begin = span_.begin() + read_position_;
+   auto end = begin + static_cast<diff_t>(v.size());
+   std::copy(begin, end, v.begin());
+
+   read_position_ += static_cast<decltype(read_position_)>(v.size());
+
+   return error::success;
+}
