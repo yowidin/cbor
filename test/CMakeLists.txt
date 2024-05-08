@@ -22,6 +22,7 @@ FetchContent_MakeAvailable(shp)
 
 add_executable(cbor_tests
     src/buffer.cpp
+    src/error.cpp
 
     src/encoding/array.cpp
     src/encoding/boxed.cpp

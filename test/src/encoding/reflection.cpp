@@ -85,3 +85,28 @@ TEST_CASE("Reflection PFR", "[encoding]") {
 TEST_CASE("Reflection custom", "[encoding]") {
    check_encoding(custom_reflection{10, 20, {1, 2}, {3, 4}}, {0x0A, 0x14, 0x82, 0x01, 0x02, 0x82, 0x03, 0x04});
 }
+
+TEST_CASE("Struct - rollback on failure", "[encoding, struct, rollback]") {
+   // {0x0A, 0x14, 0x82, 0x01, 0x02, 0x82, 0x03, 0x04}
+   const custom_reflection v{10, 20, {1, 2}, {3, 4}};
+
+   SECTION("No space for the first member") {
+      std::vector<std::byte> target{};
+      cbor::dynamic_buffer buf{target, 0};
+
+      std::error_code ec;
+      ec = cbor::encode(buf, v);
+      REQUIRE(ec == cbor::error::buffer_overflow);
+      REQUIRE(target.empty());
+   }
+
+   SECTION("No space for the last member") {
+      std::vector<std::byte> target{};
+      cbor::dynamic_buffer buf{target, 7};
+
+      std::error_code ec;
+      ec = cbor::encode(buf, v);
+      REQUIRE(ec == cbor::error::buffer_overflow);
+      REQUIRE(target.empty());
+   }
+}

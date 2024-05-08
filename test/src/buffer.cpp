@@ -63,6 +63,31 @@ TEST_CASE("Dynamic buffer can grow", "[buffer]") {
       REQUIRE(!buf.write(bytes));
       ensure_equality();
    }
+
+   SECTION("Rollbacks and commits") {
+      REQUIRE(buf.size() == 0);
+      {
+         // Rolling back, also test the move constructor
+         auto helper = std::move(buf.get_rollback_helper());
+
+         REQUIRE(!buf.write({bytes[0]}));
+         REQUIRE(buf.size() == 1);
+      }
+      REQUIRE(buf.size() == 0);
+
+      REQUIRE(buf.size() == 0);
+      {
+         // Commiting, also test the move assignment
+         auto tmp = buf.get_rollback_helper();
+         auto helper = buf.get_rollback_helper();
+         helper = std::move(tmp);
+
+         REQUIRE(!buf.write({bytes[0]}));
+         REQUIRE(buf.size() == 1);
+         helper.commit();
+      }
+      REQUIRE(buf.size() == 1);
+   }
 }
 
 TEST_CASE("Dynamic buffer size can be limited", "[buffer]") {
@@ -75,6 +100,7 @@ TEST_CASE("Dynamic buffer size can be limited", "[buffer]") {
 
    REQUIRE(!buf.write(42_b));
    REQUIRE(target.size() == 1);
+   REQUIRE(buf.size() == 1);
    REQUIRE(target[0] == 42_b);
 
    std::byte bytes[] = {0xBE_b, 0xEF_b, 0xDE_b, 0xAD_b};
@@ -177,6 +203,28 @@ TEST_CASE("Static buffer size is limited", "[buffer]") {
 
       REQUIRE(buf.size() == 1);
       REQUIRE(target[0] == 42_b);
+   }
+
+   SECTION("Rollbacks and commits") {
+      // NOTE: We start with one byte already in the buffer
+      REQUIRE(buf.size() == 1);
+      {
+         // Rolling back
+         auto helper = buf.get_rollback_helper();
+         REQUIRE(!buf.write({bytes[0]}));
+         REQUIRE(buf.size() == 2);
+      }
+      REQUIRE(buf.size() == 1);
+
+      REQUIRE(buf.size() == 1);
+      {
+         // Commiting
+         auto helper = buf.get_rollback_helper();
+         REQUIRE(!buf.write({bytes[0]}));
+         REQUIRE(buf.size() == 2);
+         helper.commit();
+      }
+      REQUIRE(buf.size() == 2);
    }
 }
 

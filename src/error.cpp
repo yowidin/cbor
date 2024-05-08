@@ -11,8 +11,8 @@
 namespace detail {
 
 struct cbor_error_category : std::error_category {
-   const char *name() const noexcept override;
-   std::string message(int ev) const override;
+   [[nodiscard]] const char *name() const noexcept override;
+   [[nodiscard]] std::string message(int ev) const override;
 };
 
 const char *cbor_error_category::name() const noexcept {

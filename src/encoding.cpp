@@ -22,7 +22,7 @@ inline constexpr uint32_t TWO_EXTRA_BYTES_VALUE_LIMIT = 0xFFFFU;
 inline constexpr uint64_t FOUR_EXTRA_BYTES_VALUE_LIMIT = 0xFFFFFFFFU;
 
 inline constexpr std::byte operator""_b(unsigned long long v) {
-   if (v > std::numeric_limits<std::uint8_t>::max()) {
+   if (v > std::numeric_limits<std::uint8_t>::max()) [[unlikely]] {
       // Dude, why?!
       std::terminate();
    }
@@ -139,13 +139,6 @@ CBOR_EXPORT std::error_code encode(buffer &buf, buffer::const_span_t v) {
    auto rollback_helper = buf.get_rollback_helper();
 
    auto size = std::size(v);
-   if (size != 0) {
-      const char last_char = *(std::begin(v) + (size - 1));
-      if (last_char == '\0') {
-         size -= 1; // Skip the NULL-terminator
-      }
-   }
-
    auto res = encode_argument(buf, major_type::text_string, size);
    if (res) {
       return res;

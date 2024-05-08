@@ -10,7 +10,7 @@
 
 using namespace test;
 
-TEST_CASE("Array", "[encoding]") {
+TEST_CASE("Array", "[encoding, array]") {
    // []
    const std::vector<std::uint32_t> a1{};
    check_encoding(a1, {0x80});
@@ -28,4 +28,29 @@ TEST_CASE("Array", "[encoding]") {
                                                       0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x18, 0x18, 0x19};
    check_encoding(a3, expected);
    check_encoding(std::span{a3}, expected);
+}
+
+TEST_CASE("Array - rollback on failure", "[encoding, array, rollback]") {
+   // [1, 2, 3] -> {0x83, 0x01, 0x02, 0x03}
+   const std::array<std::uint8_t, 3> a2{1, 2, 3};
+
+   SECTION("No space for size") {
+      std::vector<std::byte> target{};
+      cbor::dynamic_buffer buf{target, 0};
+
+      std::error_code ec;
+      ec = cbor::encode(buf, a2);
+      REQUIRE(ec == cbor::error::buffer_overflow);
+      REQUIRE(target.empty());
+   }
+
+   SECTION("No space for one entry") {
+      std::vector<std::byte> target{};
+      cbor::dynamic_buffer buf{target, 3};
+
+      std::error_code ec;
+      ec = cbor::encode(buf, a2);
+      REQUIRE(ec == cbor::error::buffer_overflow);
+      REQUIRE(target.empty());
+   }
 }

@@ -95,7 +95,7 @@ static_assert(!all_with_id<variant_a, int>());
 
 using namespace test;
 
-TEST_CASE("Variant", "[encoding]") {
+TEST_CASE("Variant - basic encoding", "[encoding]") {
    using value_t = std::variant<variant_a, variant_b>;
 
    value_t first = variant_a{.a = 1, .b = 0.0, .c = "a"};
@@ -115,4 +115,28 @@ TEST_CASE("Variant", "[encoding]") {
                      0xF6,             // a = nullopt
                      0xF5,             // b = true
                   });
+}
+
+TEST_CASE("Variant - rollback on failure", "[encoding, variant, rollback]") {
+   using value_t = std::variant<variant_a, variant_b>;
+
+   const value_t var = variant_b{.a = std::nullopt, .b = true};
+
+   SECTION("Not enough space for the type id") {
+      std::vector<std::byte> target;
+      cbor::dynamic_buffer buf{target, 0};
+
+      std::error_code ec = cbor::encode(buf, var);
+      REQUIRE(ec == cbor::error::buffer_overflow);
+      REQUIRE(buf.size() == 0);
+   }
+
+   SECTION("Not enough space for all members") {
+      std::array<std::byte, 4> target{};
+      cbor::static_buffer buf{target};
+
+      std::error_code ec = cbor::encode(buf, var);
+      REQUIRE(ec == cbor::error::buffer_overflow);
+      REQUIRE(buf.size() == 0);
+   }
 }

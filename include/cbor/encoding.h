@@ -214,6 +214,7 @@ template <Enum T>
 /// Strings
 ////////////////////////////////////////////////////////////////////////////////
 [[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, std::string_view v);
+
 [[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const char *v);
 
 template <typename CharT, typename Traits, typename Allocator>
@@ -294,8 +295,13 @@ namespace detail {
 
 template <typename T>
 bool encode_member(buffer &buf, const T &v, std::error_code &ec) {
+   // Simplify the fold expression handling by capturing the error code via a reference
+   // and returning false if encoding fails.
    ec = encode(buf, v);
-   return ec == error::success;
+   if (ec) {
+      return false;
+   }
+   return true;
 }
 
 template <typename T, std::size_t... Ns>

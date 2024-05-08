@@ -38,7 +38,7 @@ using boxed_foo = cbor::boxed<foo>;
 
 using namespace test;
 
-TEST_CASE("Boxed", "[encoding]") {
+TEST_CASE("Boxed", "[encoding, boxed]") {
    const auto raw = foo{.m = 'r'};
    const auto boxed = boxed_foo{.v = {.m = 'b'}};
 
@@ -53,4 +53,39 @@ TEST_CASE("Boxed", "[encoding]") {
                      0x19, 0xA0, 0xAA, // Type ID
                      0x18, 0x62        // m = "b"
                   });
+}
+
+TEST_CASE("Boxed - rollback on failure", "[encoding, boxed, rollback]") {
+   // {0x82, 0x19, 0xA0, 0xAA, 0x18, 0x62}
+   const auto boxed = boxed_foo{.v = {.m = 'b'}};
+
+   SECTION("No space for array") {
+      std::vector<std::byte> target{};
+      cbor::dynamic_buffer buf{target, 0};
+
+      std::error_code ec;
+      ec = cbor::encode(buf, boxed);
+      REQUIRE(ec == cbor::error::buffer_overflow);
+      REQUIRE(target.empty());
+   }
+
+   SECTION("No space for type ID") {
+      std::vector<std::byte> target{};
+      cbor::dynamic_buffer buf{target, 1};
+
+      std::error_code ec;
+      ec = cbor::encode(buf, boxed);
+      REQUIRE(ec == cbor::error::buffer_overflow);
+      REQUIRE(target.empty());
+   }
+
+   SECTION("No space for value") {
+      std::vector<std::byte> target{};
+      cbor::dynamic_buffer buf{target, 4};
+
+      std::error_code ec;
+      ec = cbor::encode(buf, boxed);
+      REQUIRE(ec == cbor::error::buffer_overflow);
+      REQUIRE(target.empty());
+   }
 }
