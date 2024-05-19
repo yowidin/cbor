@@ -16,11 +16,6 @@ namespace cbor {
 
 namespace detail {
 
-inline constexpr uint8_t ZERO_EXTRA_BYTES_VALUE_LIMIT = 23U;
-inline constexpr uint16_t ONE_EXTRA_BYTE_VALUE_LIMIT = 0xFFU;
-inline constexpr uint32_t TWO_EXTRA_BYTES_VALUE_LIMIT = 0xFFFFU;
-inline constexpr uint64_t FOUR_EXTRA_BYTES_VALUE_LIMIT = 0xFFFFFFFFU;
-
 inline constexpr std::byte operator""_b(unsigned long long v) {
    if (v > std::numeric_limits<std::uint8_t>::max()) [[unlikely]] {
       // Dude, why?!

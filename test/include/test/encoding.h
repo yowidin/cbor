@@ -51,4 +51,17 @@ void check_encoding(const T &value, std::initializer_list<std::uint8_t> expected
    compare_arrays(value, target, expected);
 }
 
+inline constexpr std::byte as_byte(std::uint8_t v) {
+   return std::byte{static_cast<std::uint8_t>(v)};
+}
+
+inline constexpr std::byte operator""_b(unsigned long long v) {
+   if (v > std::numeric_limits<std::uint8_t>::max()) {
+      // Dude, why?!
+      std::terminate();
+   }
+
+   return std::byte{static_cast<std::uint8_t>(v)};
+}
+
 } // namespace test

@@ -24,6 +24,9 @@ add_executable(cbor_tests
     src/buffer.cpp
     src/error.cpp
 
+    src/decoding/head.cpp
+    src/decoding/integers.cpp
+
     src/encoding/array.cpp
     src/encoding/boxed.cpp
     src/encoding/custom_encode.cpp

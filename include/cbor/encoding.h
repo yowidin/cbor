@@ -98,6 +98,11 @@ enum class argument_size : std::uint8_t {
 
    //! The additional information is stored in the following eight bytes
    eight_bytes = 0x1B,
+
+   //! Reserved, not well-formed in the present RFC document
+   reserved_0 = 0x1C,
+   reserved_1 = 0x1D,
+   reserved_2 = 0x1E,
 };
 
 enum class simple_type : std::uint8_t {
@@ -138,6 +143,12 @@ enum class simple_type : std::uint8_t {
 };
 
 namespace detail {
+
+inline constexpr uint8_t ZERO_EXTRA_BYTES_VALUE_LIMIT = 23U;
+inline constexpr uint16_t ONE_EXTRA_BYTE_VALUE_LIMIT = 0xFFU;
+inline constexpr uint32_t TWO_EXTRA_BYTES_VALUE_LIMIT = 0xFFFFU;
+inline constexpr uint64_t FOUR_EXTRA_BYTES_VALUE_LIMIT = 0xFFFFFFFFU;
+
 [[nodiscard]] std::error_code encode_argument(buffer &buf,
                                               major_type type,
                                               std::uint8_t argument,

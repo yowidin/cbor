@@ -47,7 +47,7 @@ TEST_CASE("Codes are named", "[error]") {
 
    std::array codes = {
       error::success,         error::encoding_error,          error::decoding_error, error::buffer_underflow,
-      error::buffer_overflow, error::value_not_representable, error::invalid_usage,  error::unexpected_type,
+      error::buffer_overflow, error::value_not_representable, error::invalid_usage,  error::unexpected_type, error::ill_formed,
    };
 
    for (auto code : codes) {

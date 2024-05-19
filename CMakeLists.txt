@@ -46,6 +46,7 @@ endif()
 # --- Actual library --- #
 add_library(cbor
     src/buffer.cpp
+    src/decoding.cpp
     src/encoding.cpp
     src/error.cpp
 )

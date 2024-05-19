@@ -46,6 +46,9 @@ std::string cbor_error_category::message(int ev) const {
       case error::unexpected_type:
          return "unexpected type while decoding";
 
+      case error::ill_formed:
+         return "encoded byte-sequence is ill-formed";
+
       default:
          return "(unrecognized error)";
    }

@@ -36,6 +36,9 @@ enum class error {
 
    //! Encountered an unexpected type while decoding
    unexpected_type,
+
+   //! The encoded byte-sequence is ill-formed
+   ill_formed,
 };
 
 const std::error_category &cbor_category() noexcept CBOR_EXPORT;
