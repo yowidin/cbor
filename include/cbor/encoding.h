@@ -200,7 +200,7 @@ template <SignedInt T>
 [[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, T v) {
    using unsigned_t = std::make_unsigned_t<T>;
    if (v < 0) {
-      const auto argument = static_cast<unsigned_t>(static_cast<unsigned_t>(-1) - v);
+      const auto argument = static_cast<unsigned_t>(static_cast<T>(-1) - v);
       return encode_argument(buf, major_type::signed_int, argument);
    } else {
       return encode_argument(buf, major_type::unsigned_int, static_cast<unsigned_t>(v));

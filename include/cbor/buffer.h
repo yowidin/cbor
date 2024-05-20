@@ -190,6 +190,7 @@ public:
    [[nodiscard]] std::error_code read(buffer::span_t v);
 
    [[nodiscard]] std::ptrdiff_t read_position() const { return read_position_; }
+   void reset() { read_position_ = 0; }
 
 private:
    buffer::const_span_t span_;

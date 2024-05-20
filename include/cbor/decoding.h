@@ -63,4 +63,45 @@ template <UnsignedInt T>
    return error::success;
 }
 
+template <SignedInt T>
+[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, T &v) {
+   detail::head head{};
+   auto res = head.read(buf);
+   if (res) {
+      return res;
+   }
+
+   if (head.type == major_type::unsigned_int) {
+      // The requested type is signed, but the stored value is unsigned.
+      // This just means that the stored value is positive.
+      const auto u64 = head.decode_argument();
+      if (u64 > max_int_v<T>) {
+         return error::value_not_representable;
+      }
+
+      v = static_cast<T>(u64);
+      return error::success;
+   }
+
+   if (head.type != major_type::signed_int) {
+      return error::unexpected_type;
+   }
+
+   const auto u64 = head.decode_argument();
+   if (u64 > max_int_v<std::int64_t>) {
+      return error::value_not_representable;
+   }
+
+   // The value is encoded as u64 = -1 - n, meaning that to get back to n we have to do the following:
+   // n = -1 - u64
+   std::int64_t n = static_cast<std::int64_t>(-1) - static_cast<std::int64_t>(u64);
+   if (n < min_int_v<T>) {
+      return error::value_not_representable;
+   }
+
+   v = static_cast<T>(n);
+
+   return error::success;
+}
+
 } // namespace cbor
