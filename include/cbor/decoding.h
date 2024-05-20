@@ -121,4 +121,39 @@ template <Enum T>
    return error::success;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Byte Arrays
+////////////////////////////////////////////////////////////////////////////////
+template <typename Allocator>
+[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf,
+                                                 std::vector<std::byte, Allocator> &v,
+                                                 typename std::vector<std::byte, Allocator>::size_type max_size =
+                                                    max_int_v<typename std::vector<std::byte, Allocator>::size_type>) {
+   using vector_t = std::vector<std::byte, Allocator>;
+   static_assert(max_int_v<std::uint64_t> <= max_int_v<typename vector_t::size_type>);
+
+   detail::head head{};
+   auto res = head.read(buf);
+   if (res) {
+      return res;
+   }
+
+   if (head.type != major_type::byte_string) {
+      return error::unexpected_type;
+   }
+
+   auto u64 = head.decode_argument();
+   if (u64 > max_size) {
+      return error::buffer_overflow;
+   }
+
+   v.resize(u64);
+
+   if (u64 != 0) {
+      return buf.read(buffer::span_t{v});
+   }
+
+   return error::success;
+}
+
 } // namespace cbor

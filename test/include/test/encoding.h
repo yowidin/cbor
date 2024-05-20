@@ -51,6 +51,14 @@ void check_encoding(const T &value, std::initializer_list<std::uint8_t> expected
    compare_arrays(value, target, expected);
 }
 
+template <typename T>
+inline constexpr std::vector<std::byte> as_bytes(const T &v) {
+   std::vector<std::byte> result{};
+   result.resize(std::size(v));
+   std::transform(std::begin(v), std::end(v), std::begin(result), [](auto e) { return static_cast<std::byte>(e); });
+   return result;
+}
+
 inline constexpr std::byte as_byte(std::uint8_t v) {
    return std::byte{static_cast<std::uint8_t>(v)};
 }

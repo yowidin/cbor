@@ -7,7 +7,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
 
-#include <test/encoding.h>
+#include <test/decoding.h>
 
 #include <cbor/decoding.h>
 
@@ -129,13 +129,9 @@ TEST_CASE("Head decoding - size extraction", "[decoding, head, size]") {
 
 TEST_CASE("Head decoding - argument decoding", "[decoding, head, argument]") {
    auto expect = [](std::initializer_list<std::uint8_t> cbor, std::uint64_t expected) {
-      std::vector<std::byte> as_bytes{};
-      for (auto v : cbor) {
-         as_bytes.push_back(as_byte(v));
-      }
+      auto cbor_bytes = as_bytes(cbor);
 
-      cbor::buffer::const_span_t span{as_bytes};
-      cbor::read_buffer buf{span};
+      cbor::read_buffer buf{span_t{cbor_bytes}};
 
       head_t h{};
       REQUIRE(h.read(buf) == cbor::error::success);
