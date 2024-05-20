@@ -156,4 +156,41 @@ template <typename Allocator>
    return error::success;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Strings
+////////////////////////////////////////////////////////////////////////////////
+template <typename CharT, typename Traits, typename Allocator>
+[[nodiscard]] CBOR_EXPORT std::error_code decode(
+   read_buffer &buf,
+   std::basic_string<CharT, Traits, Allocator> &v,
+   typename std::basic_string<CharT, Traits, Allocator>::size_type max_size =
+      max_int_v<typename std::basic_string<CharT, Traits, Allocator>::size_type>) {
+   using string_t = std::basic_string<CharT, Traits, Allocator>;
+   static_assert(max_int_v<std::uint64_t> <= max_int_v<typename string_t::size_type>);
+   static_assert(sizeof(typename string_t::value_type) == sizeof(std::byte));
+
+   detail::head head{};
+   auto res = head.read(buf);
+   if (res) {
+      return res;
+   }
+
+   if (head.type != major_type::text_string) {
+      return error::unexpected_type;
+   }
+
+   auto u64 = head.decode_argument();
+   if (u64 > max_size) {
+      return error::buffer_overflow;
+   }
+
+   v.resize(u64);
+
+   if (u64 != 0) {
+      return buf.read(buffer::span_t{reinterpret_cast<std::byte *>(v.data()), v.size()});
+   }
+
+   return error::success;
+}
+
 } // namespace cbor
