@@ -104,4 +104,21 @@ template <SignedInt T>
    return error::success;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Enums
+////////////////////////////////////////////////////////////////////////////////
+template <Enum T>
+[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, T &v) {
+   using int_t = std::underlying_type_t<T>;
+
+   int_t as_int;
+   auto res = decode(buf, as_int);
+   if (res) {
+      return res;
+   }
+
+   v = static_cast<T>(as_int);
+   return error::success;
+}
+
 } // namespace cbor

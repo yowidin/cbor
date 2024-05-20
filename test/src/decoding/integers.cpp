@@ -7,7 +7,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
 
-#include <test/encoding.h>
+#include <test/decoding.h>
 
 #include <cbor/decoding.h>
 
@@ -41,23 +41,6 @@ TEST_CASE("Unsigned - decoding errors", "[decoding, unsigned, errors]") {
       std::uint8_t v;
       REQUIRE(cbor::decode(buf, v) == cbor::error::value_not_representable);
    }
-}
-
-template <typename T>
-void expect(std::initializer_list<std::uint8_t> cbor, T expected) {
-   std::vector<std::byte> as_bytes{};
-   for (auto v : cbor) {
-      as_bytes.push_back(static_cast<std::byte>(v));
-   }
-
-   cbor::buffer::const_span_t span{as_bytes};
-   cbor::read_buffer buf{span};
-
-   T decoded;
-   auto res = cbor::decode(buf, decoded);
-
-   REQUIRE(!res);
-   REQUIRE(expected == decoded);
 }
 
 TEST_CASE("Unsigned - basic decoding", "[decoding, unsigned]") {
