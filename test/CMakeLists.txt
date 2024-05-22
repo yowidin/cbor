@@ -28,6 +28,7 @@ add_executable(cbor_tests
     src/decoding/enums.cpp
     src/decoding/head.cpp
     src/decoding/integers.cpp
+    src/decoding/simple_types.cpp
     src/decoding/strings.cpp
 
     src/encoding/array.cpp

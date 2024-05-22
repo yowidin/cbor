@@ -81,3 +81,35 @@ std::uint64_t head::decode_argument() const {
 }
 
 } // namespace cbor::detail
+
+namespace cbor {
+
+////////////////////////////////////////////////////////////////////////////////
+/// Simple Types
+////////////////////////////////////////////////////////////////////////////////
+std::error_code decode(read_buffer &buf, bool &v) {
+   detail::head head{};
+   auto res = head.read(buf);
+   if (res) {
+      return res;
+   }
+
+   if (head.type != major_type::simple) {
+      return error::unexpected_type;
+   }
+
+   switch (head.simple) {
+      case simple_type::true_type:
+         v = true;
+         return error::success;
+
+      case simple_type::false_type:
+         v = false;
+         return error::success;
+
+      default:
+         return error::unexpected_type;
+   }
+}
+
+} // namespace cbor
