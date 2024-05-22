@@ -86,6 +86,13 @@ TEST_CASE("Reflection custom", "[encoding]") {
    check_encoding(custom_reflection{10, 20, {1, 2}, {3, 4}}, {0x0A, 0x14, 0x82, 0x01, 0x02, 0x82, 0x03, 0x04});
 }
 
+TEST_CASE("Reflection custom - wrapped in optional", "[encoding]") {
+   check_encoding(std::optional<custom_reflection>{{10, 20, {1, 2}, {3, 4}}},
+                  {0x0A, 0x14, 0x82, 0x01, 0x02, 0x82, 0x03, 0x04});
+
+   check_encoding(std::optional<custom_reflection>{}, {0xF6});
+}
+
 TEST_CASE("Struct - rollback on failure", "[encoding, struct, rollback]") {
    // {0x0A, 0x14, 0x82, 0x01, 0x02, 0x82, 0x03, 0x04}
    const custom_reflection v{10, 20, {1, 2}, {3, 4}};

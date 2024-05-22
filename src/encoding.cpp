@@ -24,22 +24,6 @@ inline constexpr std::byte operator""_b(unsigned long long v) {
    return std::byte{static_cast<std::uint8_t>(v)};
 }
 
-inline std::byte operator|(major_type m, argument_size s) {
-   const auto lhs = static_cast<std::byte>(m);
-   const auto rhs = static_cast<std::byte>(s);
-   return lhs | rhs;
-}
-
-inline std::byte operator|(major_type m, simple_type s) {
-   const auto lhs = static_cast<std::byte>(m);
-   const auto rhs = static_cast<std::byte>(s);
-   return lhs | rhs;
-}
-
-inline std::byte operator|(std::byte b, std::uint8_t v) {
-   return b | std::byte{v};
-}
-
 std::error_code encode_argument(buffer &buf, major_type type, std::uint8_t v, bool compress) {
    if (compress && v <= ZERO_EXTRA_BYTES_VALUE_LIMIT) {
       // The argument's value is the value of the additional information

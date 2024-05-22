@@ -198,4 +198,38 @@ template <typename CharT, typename Traits, typename Allocator>
 ////////////////////////////////////////////////////////////////////////////////
 [[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, bool &v);
 
+template <typename T>
+[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, std::optional<T> &v) {
+   {
+      using namespace cbor::detail;
+
+      // Handle the NULL-case
+      auto rollback_helper = buf.get_rollback_helper();
+
+      std::byte head;
+      auto res = buf.read(head);
+      if (res) {
+         return res;
+      }
+
+      const auto nullptr_byte = major_type::simple | simple_type::null_type;
+      if (head == nullptr_byte) {
+         v = std::nullopt;
+         rollback_helper.commit();
+         return error::success;
+      }
+   }
+
+   // At this point we rolled back the buffer read position, and can try reading out
+   // the actual value
+   T value;
+   auto res = decode(buf, value);
+   if (res) {
+      return res;
+   }
+
+   v = value;
+   return error::success;
+}
+
 } // namespace cbor

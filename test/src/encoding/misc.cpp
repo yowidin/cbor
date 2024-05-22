@@ -211,7 +211,7 @@ TEST_CASE("Simple type", "[encoding]") {
    check_encoding(nullptr, {0xF6});
 }
 
-TEST_CASE("Optional", "[encoding]") {
+TEST_CASE("Optional - encoding", "[encoding]") {
    check_encoding(std::optional<int>{}, {0xF6});
    check_encoding(std::optional<int>{25}, {0x18, 0x19});
 
