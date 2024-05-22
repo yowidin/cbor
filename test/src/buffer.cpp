@@ -330,4 +330,32 @@ TEST_CASE("Read buffer - reading", "[buffer, read_buffer]") {
       REQUIRE(ec == error::buffer_underflow);
       REQUIRE(buf.read_position() == 1 + target_buffer.size());
    }
+
+   SECTION("Rollbacks and commits") {
+      std::array<std::byte, 2> target_buffer{};
+      buffer::span_t target{target_buffer};
+      std::error_code ec;
+
+      REQUIRE(!buf.read(target));
+      const auto start = target.size();
+
+      // Start in the middle of the buffer
+      REQUIRE(buf.read_position() == start);
+      {
+         // Rolling back
+         auto helper = buf.get_rollback_helper();
+         REQUIRE(!buf.read(target));
+         REQUIRE(buf.read_position() == start + 2);
+      }
+      REQUIRE(buf.read_position() == start);
+
+      {
+         // Commiting
+         auto helper = buf.get_rollback_helper();
+         REQUIRE(!buf.read(target));
+         REQUIRE(buf.read_position() == start + 2);
+         helper.commit();
+      }
+      REQUIRE(buf.read_position() == start + 2);
+   }
 }

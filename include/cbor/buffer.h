@@ -88,7 +88,7 @@ public:
    [[nodiscard]] virtual std::error_code write(const_span_t v) = 0;
    [[nodiscard]] virtual std::size_t size() = 0;
 
-   rollback_helper get_rollback_helper() { return rollback_helper(*this); }
+   [[nodiscard]] rollback_helper get_rollback_helper() { return rollback_helper(*this); }
 
 protected:
    [[nodiscard]] virtual rollback_token_t begin_nested_write() = 0;
@@ -176,6 +176,52 @@ private:
  */
 class CBOR_EXPORT read_buffer final {
 public:
+   class rollback_helper {
+   public:
+      explicit rollback_helper(read_buffer &b)
+         : buf_{&b}
+         , start_position_{b.read_position()} {
+         // Nothing to do here
+      }
+
+      ~rollback_helper() {
+         if (buf_ && rollback_) {
+            buf_->reset(start_position_);
+         }
+      }
+
+      rollback_helper(rollback_helper &) = delete;
+      rollback_helper(rollback_helper &&o) noexcept
+         : buf_{o.buf_}
+         , start_position_{o.start_position_}
+         , rollback_{o.rollback_} {
+         o.buf_ = nullptr;
+         o.rollback_ = false;
+      }
+
+   public:
+      void commit() { rollback_ = false; }
+
+   public:
+      rollback_helper &operator=(rollback_helper &) = delete;
+      rollback_helper &operator=(rollback_helper &&o) noexcept {
+         buf_ = o.buf_;
+         start_position_ = o.start_position_;
+         rollback_ = o.rollback_;
+
+         o.buf_ = nullptr;
+         o.rollback_ = false;
+
+         return *this;
+      }
+
+   private:
+      read_buffer *buf_;
+      std::ptrdiff_t start_position_; //! Read position to rollback to (in absence of a commit)
+      bool rollback_{true};
+   };
+
+public:
    read_buffer(buffer::const_span_t span);
 
    read_buffer(const read_buffer &) = delete;
@@ -190,7 +236,9 @@ public:
    [[nodiscard]] std::error_code read(buffer::span_t v);
 
    [[nodiscard]] std::ptrdiff_t read_position() const { return read_position_; }
-   void reset() { read_position_ = 0; }
+   void reset(std::ptrdiff_t position = 0) { read_position_ = position; }
+
+   [[nodiscard]] rollback_helper get_rollback_helper() { return rollback_helper(*this); }
 
 private:
    buffer::const_span_t span_;
