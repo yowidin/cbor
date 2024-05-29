@@ -31,6 +31,7 @@ add_executable(cbor_tests
     src/decoding/integers.cpp
     src/decoding/simple_types.cpp
     src/decoding/strings.cpp
+    src/decoding/variant.cpp
 
     src/encoding/array.cpp
     src/encoding/boxed.cpp

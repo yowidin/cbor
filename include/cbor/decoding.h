@@ -10,6 +10,8 @@
 #include <cbor/encoding.h>
 
 #include <array>
+#include <utility>
+#include <variant>
 
 namespace cbor {
 
@@ -237,5 +239,74 @@ template <typename T>
 ////////////////////////////////////////////////////////////////////////////////
 [[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, float &v);
 [[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, double &v);
+
+////////////////////////////////////////////////////////////////////////////////
+/// Variants
+////////////////////////////////////////////////////////////////////////////////
+template <typename T>
+concept Decodable = requires(T &t) { decode(std::declval<read_buffer &>(), t); };
+
+template <typename... T>
+concept AllDecodable = (Decodable<T> && ...);
+
+namespace detail {
+
+template <typename Current, typename... All>
+   requires AllWithTypeID<All...> && AllDecodable<All...>
+bool try_decode(std::uint64_t type_id, read_buffer &buf, std::variant<All...> &v, std::error_code &ec) {
+   if (type_id_v<Current> != type_id) {
+      // Not the encoded type - return true to avoid short-circuiting and continue search
+      return true;
+   }
+
+   Current res;
+   ec = decode(buf, res);
+   if (!ec) {
+      v = res;
+   }
+
+   // Always return false to signal that we finished decoding: we found a match for the Type ID
+   // this will also short-circuit the try_decode_all function and finish decoding.
+   return false;
+}
+
+template <typename VariantT, std::size_t... Ns>
+std::error_code try_decode_all(std::uint64_t type_id, read_buffer &buf, VariantT &v, std::index_sequence<Ns...>) {
+   std::error_code ec;
+   bool missing_type = ((try_decode<std::variant_alternative_t<Ns, VariantT>>(type_id, buf, v, ec)) && ...);
+   if (missing_type) {
+      // The encoded value is not in the variant's alternatives set
+      return error::unexpected_type;
+   }
+   return ec;
+}
+} // namespace detail
+
+/**
+ * Decode a boxed variant.
+ *
+ * This function intentionally doesn't support primitive variant types. It is intended to be used with structs and
+ * classes, because the primitive types:
+ * - Have explicit Type ID as part of the argument encoding.
+ * - Should not be used as a variant selector (a well-defined struct is almost always better in communicating intent).
+ *
+ * @tparam T variant types.
+ * @param[in] buf Buffer to decode the value from.
+ * @param[out] v Value to be decoded.
+ * @return Operation result.
+ */
+template <typename... T>
+   requires AllWithTypeID<T...> && AllDecodable<T...>
+[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, std::variant<T...> &v) {
+   std::int64_t type_id;
+   auto res = decode(buf, type_id);
+   if (res) {
+      return res;
+   }
+
+   using type_idx_t = std::make_index_sequence<std::variant_size_v<std::remove_cvref_t<decltype(v)>>>;
+   res = detail::try_decode_all(type_id, buf, v, type_idx_t{});
+   return res;
+}
 
 } // namespace cbor
