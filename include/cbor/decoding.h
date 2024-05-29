@@ -232,4 +232,10 @@ template <typename T>
    return error::success;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Simple Types: floats
+////////////////////////////////////////////////////////////////////////////////
+[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, float &v);
+[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, double &v);
+
 } // namespace cbor
