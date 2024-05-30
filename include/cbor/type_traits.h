@@ -110,18 +110,31 @@ template <std::size_t Idx, WhitelistedStruct T>
    return boost::pfr::get<Idx>(v);
 }
 
+template <std::size_t Idx, WhitelistedStruct T>
+[[nodiscard]] auto &get_member_non_const(T &v) {
+   return boost::pfr::get<Idx>(v);
+}
 #else
 template <WhitelistedStruct T>
 [[nodiscard]] consteval std::size_t get_member_count();
 
 template <std::size_t Idx, WhitelistedStruct T>
 [[nodiscard]] const auto &get_member(const T &v);
+
+template <std::size_t Idx, WhitelistedStruct T>
+[[nodiscard]] auto &get_member_non_const(T &v);
 #endif // CBOR_WITH(BOOST_PFR)
 
 template <typename T>
-concept EncodableStruct = WhitelistedStruct<T> && requires(T t) {
+concept EncodableStruct = WhitelistedStruct<T> && requires(const T &t) {
    { get_member_count<T>() } -> std::same_as<std::size_t>;
    { get_member<0>(t) };
+};
+
+template <typename T>
+concept DecodableStruct = WhitelistedStruct<T> && requires(T &t) {
+   { get_member_count<T>() } -> std::same_as<std::size_t>;
+   { get_member_non_const<0>(t) };
 };
 
 } // namespace cbor

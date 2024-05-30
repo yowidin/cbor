@@ -340,4 +340,39 @@ template <typename... T>
    return res;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Structs
+////////////////////////////////////////////////////////////////////////////////
+namespace detail {
+
+template <typename T>
+bool decode_member(read_buffer &buf, T &v, std::error_code &ec) {
+   // Simplify the fold expression handling by capturing the error code via a reference
+   // and returning false if decoding fails.
+   ec = decode(buf, v);
+   if (ec) {
+      return false;
+   }
+   return true;
+}
+
+template <typename T, std::size_t... Ns>
+std::error_code decode_all(read_buffer &buf, T &v, std::index_sequence<Ns...>) {
+   std::error_code ec;
+   ((decode_member(buf, get_member_non_const<Ns>(v), ec)) && ...);
+   return ec;
+}
+} // namespace detail
+
+template <DecodableStruct T>
+[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, T &v) {
+   using member_idx_t = std::make_index_sequence<get_member_count<T>()>;
+   auto res = detail::decode_all(buf, v, member_idx_t{});
+   if (res) {
+      return res;
+   }
+
+   return res;
+}
+
 } // namespace cbor
