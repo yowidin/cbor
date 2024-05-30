@@ -49,7 +49,7 @@ namespace cbor {
 
 using namespace test;
 
-TEST_CASE("User-provided encode", "[encoding]") {
+TEST_CASE("Struct - user-provided encode", "[encoding, struct]") {
    check_encoding(custom_encode{.a = 1, .b = 0.0, .c = "a"},
                   {
                      0x01,             // a = 1

@@ -23,7 +23,7 @@ inline constexpr std::byte operator""_b(unsigned long long v) {
 }
 } // namespace
 
-TEST_CASE("Dynamic buffer can grow", "[buffer]") {
+TEST_CASE("Buffer - dynamic buffer can grow", "[buffer]") {
    std::vector<std::byte> target{};
    dynamic_buffer buf{target};
 
@@ -90,7 +90,7 @@ TEST_CASE("Dynamic buffer can grow", "[buffer]") {
    }
 }
 
-TEST_CASE("Dynamic buffer size can be limited", "[buffer]") {
+TEST_CASE("Buffer - dynamic buffer size can be limited", "[buffer]") {
    std::vector<std::byte> target{};
    dynamic_buffer buf{target, 2};
 
@@ -149,7 +149,7 @@ TEST_CASE("Dynamic buffer size can be limited", "[buffer]") {
    }
 }
 
-TEST_CASE("Static buffer size is limited", "[buffer]") {
+TEST_CASE("Buffer - static buffer size is limited", "[buffer]") {
    std::array<std::byte, 2> target{};
    static_buffer buf{target};
 
@@ -228,7 +228,7 @@ TEST_CASE("Static buffer size is limited", "[buffer]") {
    }
 }
 
-TEST_CASE("Read buffer - NULL-source is allowed", "[buffer, read_buffer]") {
+TEST_CASE("Buffer - NULL-source is allowed for read buffer", "[buffer, read_buffer]") {
    const buffer::const_span_t src{};
 
    read_buffer buf{src};
@@ -256,7 +256,7 @@ TEST_CASE("Read buffer - NULL-source is allowed", "[buffer, read_buffer]") {
    }
 }
 
-TEST_CASE("Read buffer - reading", "[buffer, read_buffer]") {
+TEST_CASE("Buffer - read buffer reading", "[buffer, read_buffer]") {
    const std::array<std::byte, 4> source_buffer{0x01_b, 0x02_b, 0x03_b, 0x04_b};
    const buffer::const_span_t src{source_buffer};
 

@@ -12,7 +12,7 @@
 
 using namespace test;
 
-TEST_CASE("Floating Point", "[encoding]") {
+TEST_CASE("Floats - basic encoding", "[encoding]") {
    check_encoding(0.0f, {0xF9, 0x00, 0x00});
    check_encoding(0.0, {0xF9, 0x00, 0x00});
 

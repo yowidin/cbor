@@ -15,18 +15,18 @@
 
 using namespace cbor;
 
-TEST_CASE("Category is named", "[error]") {
+TEST_CASE("Error - category is named", "[error]") {
    std::error_code ec = error::success;
    REQUIRE(!std::string{ec.category().name()}.empty());
 }
 
-TEST_CASE("Success should be zero", "[error]") {
+TEST_CASE("Error - success should be zero", "[error]") {
    std::error_code ec = error::success;
    REQUIRE(ec.value() == 0);
    REQUIRE(!ec);
 }
 
-TEST_CASE("Codes are named", "[error]") {
+TEST_CASE("Error - codes are named", "[error]") {
    const std::error_code bad_code{-1, cbor_category()};
    REQUIRE(!bad_code.message().empty());
 

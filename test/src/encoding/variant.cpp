@@ -95,7 +95,7 @@ static_assert(!all_with_id<variant_a, int>());
 
 using namespace test;
 
-TEST_CASE("Variant - basic encoding", "[encoding]") {
+TEST_CASE("Variant - basic encoding", "[encoding, variant]") {
    using value_t = std::variant<variant_a, variant_b>;
 
    value_t first = variant_a{.a = 1, .b = 0.0, .c = "a"};
@@ -117,7 +117,7 @@ TEST_CASE("Variant - basic encoding", "[encoding]") {
                   });
 }
 
-TEST_CASE("Variant - rollback on failure", "[encoding, variant, rollback]") {
+TEST_CASE("Variant - encoding rollback on failure", "[encoding, variant, rollback]") {
    using value_t = std::variant<variant_a, variant_b>;
 
    const value_t var = variant_b{.a = std::nullopt, .b = true};

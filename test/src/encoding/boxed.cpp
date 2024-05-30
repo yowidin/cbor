@@ -38,7 +38,7 @@ using boxed_foo = cbor::boxed<foo>;
 
 using namespace test;
 
-TEST_CASE("Boxed", "[encoding, boxed]") {
+TEST_CASE("Boxed - basic encoding", "[encoding, boxed]") {
    const auto raw = foo{.m = 'r'};
    const auto boxed = boxed_foo{.v = {.m = 'b'}};
 
@@ -55,7 +55,7 @@ TEST_CASE("Boxed", "[encoding, boxed]") {
                   });
 }
 
-TEST_CASE("Boxed - rollback on failure", "[encoding, boxed, rollback]") {
+TEST_CASE("Boxed - encoding rollback on failure", "[encoding, boxed, rollback]") {
    // {0x82, 0x19, 0xA0, 0xAA, 0x18, 0x62}
    const auto boxed = boxed_foo{.v = {.m = 'b'}};
 

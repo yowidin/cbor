@@ -10,7 +10,7 @@
 
 using namespace test;
 
-TEST_CASE("Array", "[encoding, array]") {
+TEST_CASE("Array - basic encoding", "[encoding, array]") {
    // []
    const std::vector<std::uint32_t> a1{};
    check_encoding(a1, {0x80});
@@ -30,7 +30,7 @@ TEST_CASE("Array", "[encoding, array]") {
    check_encoding(std::span{a3}, expected);
 }
 
-TEST_CASE("Array - rollback on failure", "[encoding, array, rollback]") {
+TEST_CASE("Array - encoding rollback on failure", "[encoding, array, rollback]") {
    // [1, 2, 3] -> {0x83, 0x01, 0x02, 0x03}
    const std::array<std::uint8_t, 3> a2{1, 2, 3};
 

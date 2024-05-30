@@ -127,7 +127,7 @@ TEST_CASE("Variant - basic decoding", "[decoding, variant]") {
       second);
 }
 
-TEST_CASE("Variant decoding - error cases", "[decoding, variant, errors]") {
+TEST_CASE("Variant - decoding error cases", "[decoding, variant, errors]") {
    SECTION("Not enough data to read type_id head") {
       std::array<std::byte, 2> source{};
       cbor::read_buffer buf{span_t{source.data(), 0}};

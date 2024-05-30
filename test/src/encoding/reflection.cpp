@@ -73,7 +73,7 @@ const auto &cbor::get_member<3>(const custom_reflection &v) {
 }
 
 #if CBOR_WITH(BOOST_PFR)
-TEST_CASE("Reflection PFR", "[encoding]") {
+TEST_CASE("Struct - encoding with PFR reflection", "[encoding, struct]") {
    // Defining a type_id overload should be enough to whitelist a struct with PFR
    check_encoding(pfr_via_type_id{10, 20}, {0x0A, 0x14});
 
@@ -82,18 +82,18 @@ TEST_CASE("Reflection PFR", "[encoding]") {
 }
 #endif // CBOR_WITH(BOOST_PFR)
 
-TEST_CASE("Reflection custom", "[encoding]") {
+TEST_CASE("Struct - encoding with custom reflection", "[encoding, struct]") {
    check_encoding(custom_reflection{10, 20, {1, 2}, {3, 4}}, {0x0A, 0x14, 0x82, 0x01, 0x02, 0x82, 0x03, 0x04});
 }
 
-TEST_CASE("Reflection custom - wrapped in optional", "[encoding]") {
+TEST_CASE("Struct - encoding with custom reflection and wrapped in optional", "[encoding, struct, optional]") {
    check_encoding(std::optional<custom_reflection>{{10, 20, {1, 2}, {3, 4}}},
                   {0x0A, 0x14, 0x82, 0x01, 0x02, 0x82, 0x03, 0x04});
 
    check_encoding(std::optional<custom_reflection>{}, {0xF6});
 }
 
-TEST_CASE("Struct - rollback on failure", "[encoding, struct, rollback]") {
+TEST_CASE("Struct - encoding rollback on failure", "[encoding, struct, rollback]") {
    // {0x0A, 0x14, 0x82, 0x01, 0x02, 0x82, 0x03, 0x04}
    const custom_reflection v{10, 20, {1, 2}, {3, 4}};
 

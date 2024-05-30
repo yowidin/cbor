@@ -55,7 +55,7 @@ auto test_smallest_argument() {
 
 } // namespace arguments
 
-TEST_CASE("Arguments - smallest int is used", "[encoding]") {
+TEST_CASE("Argument - encoding with the smallest int", "[encoding]") {
    using namespace arguments;
 
    SECTION("16 Bits") {
@@ -85,7 +85,7 @@ TEST_CASE("Arguments - basic encoding", "[encoding]") {
                   {0x1B, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF});
 }
 
-TEST_CASE("Unsigned", "[encoding]") {
+TEST_CASE("Unsigned - basic encoding", "[encoding]") {
    check_encoding(0U, {0x00});
    check_encoding(1U, {0x01});
    check_encoding(10U, {0x0A});
@@ -99,7 +99,7 @@ TEST_CASE("Unsigned", "[encoding]") {
    check_encoding(std::numeric_limits<std::uint64_t>::max(), {0x1B, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF});
 }
 
-TEST_CASE("Signed", "[encoding]") {
+TEST_CASE("Signed - basic encoding", "[encoding]") {
    check_encoding(-1, {0x20});
    check_encoding(-10, {0x29});
    check_encoding(-100, {0x38, 0x63});
@@ -108,7 +108,7 @@ TEST_CASE("Signed", "[encoding]") {
    check_encoding(std::numeric_limits<std::int64_t>::min(), {0x3B, 0x7F, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF});
 }
 
-TEST_CASE("Enum", "[encoding]") {
+TEST_CASE("Enum - basic encoding", "[encoding]") {
    enum class long_class : long {
       a = -10,
       b = 23,
@@ -134,7 +134,7 @@ TEST_CASE("Enum", "[encoding]") {
    check_encoding(ls_b, {0x17});
 }
 
-TEST_CASE("Byte Array - happy path", "[encoding, byte_array]") {
+TEST_CASE("Byte arrays - basic encoding", "[encoding, byte_array]") {
    // Ensure that a signed int is encoded as the expected byte array
    auto check_encoding = [](std::initializer_list<std::uint8_t> value, std::initializer_list<std::uint8_t> expected) {
       ::check_encoding(std::as_bytes(std::span{value}), expected);
@@ -144,7 +144,7 @@ TEST_CASE("Byte Array - happy path", "[encoding, byte_array]") {
    check_encoding({0x01, 0x02, 0x03, 0x04}, {0x44, 0x01, 0x02, 0x03, 0x04});
 }
 
-TEST_CASE("Byte Array - error conditions", "[encoding, byte_array]") {
+TEST_CASE("Byte arrays - encoding errors", "[encoding, byte_array]") {
    SECTION("Not enough space for the argument type") {
       std::vector<std::byte> target;
       cbor::dynamic_buffer buf{target, 0};
@@ -164,7 +164,7 @@ TEST_CASE("Byte Array - error conditions", "[encoding, byte_array]") {
    }
 }
 
-TEST_CASE("String", "[encoding]") {
+TEST_CASE("String - basic encoding", "[encoding]") {
    check_encoding("", {0x60});
    check_encoding("a", {0x61, 0x61});
    check_encoding("IETF", {0x64, 0x49, 0x45, 0x54, 0x46});
@@ -183,7 +183,7 @@ TEST_CASE("String", "[encoding]") {
    check_encoding(decayed_char_array_2, {0x61, 0x61});
 }
 
-TEST_CASE("String - error conditions", "[encoding, string]") {
+TEST_CASE("String - encoding errors", "[encoding, string]") {
    SECTION("Not enough space for payload") {
       std::vector<std::byte> target;
       cbor::dynamic_buffer buf{target, 0};
@@ -205,13 +205,13 @@ TEST_CASE("String - error conditions", "[encoding, string]") {
    }
 }
 
-TEST_CASE("Simple type", "[encoding]") {
+TEST_CASE("Simple type - basic encoding", "[encoding]") {
    check_encoding(false, {0xF4});
    check_encoding(true, {0xF5});
    check_encoding(nullptr, {0xF6});
 }
 
-TEST_CASE("Optional - encoding", "[encoding]") {
+TEST_CASE("Optional - basic encoding", "[encoding]") {
    check_encoding(std::optional<int>{}, {0xF6});
    check_encoding(std::optional<int>{25}, {0x18, 0x19});
 
@@ -219,7 +219,7 @@ TEST_CASE("Optional - encoding", "[encoding]") {
    check_encoding(std::optional<std::string>{"IETF"}, {0x64, 0x49, 0x45, 0x54, 0x46});
 }
 
-TEST_CASE("Dictionary", "[encoding, dictionary]") {
+TEST_CASE("Dictionary - basic encoding", "[encoding, dictionary]") {
    using namespace std;
 
    // {1: "1", 2: "22"}
@@ -242,7 +242,7 @@ TEST_CASE("Dictionary", "[encoding, dictionary]") {
                    0x61, 0x43, 0x61, 0x64, 0x61, 0x44, 0x61, 0x65, 0x61, 0x45});
 }
 
-TEST_CASE("Dictionary - rollback on failure", "[encoding, dictionary, rollback]") {
+TEST_CASE("Dictionary - encoding rollback on failure", "[encoding, dictionary, rollback]") {
    using namespace std;
 
    // {0xA2, 0x01, 0x02, 0x03, 0x04}
