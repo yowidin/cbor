@@ -158,6 +158,37 @@ template <typename Allocator>
    return error::success;
 }
 
+template <std::size_t Extent>
+[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, std::array<std::byte, Extent> &v) {
+   using array_t = std::array<std::byte, Extent>;
+   static_assert(max_int_v<std::uint64_t> <= max_int_v<typename array_t::size_type>);
+
+   detail::head head{};
+   auto res = head.read(buf);
+   if (res) {
+      return res;
+   }
+
+   if (head.type != major_type::byte_string) {
+      return error::unexpected_type;
+   }
+
+   auto u64 = head.decode_argument();
+   if (u64 > Extent) {
+      return error::buffer_overflow;
+   }
+
+   if (u64 < Extent) {
+      return error::buffer_underflow;
+   }
+
+   if (u64 != 0) {
+      return buf.read(buffer::span_t{v});
+   }
+
+   return error::success;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Strings
 ////////////////////////////////////////////////////////////////////////////////
