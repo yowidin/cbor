@@ -13,7 +13,6 @@
 
 using namespace test;
 
-using span_t = cbor::buffer::const_span_t;
 using vec_t = std::vector<std::byte>;
 using array_t = std::array<std::byte, 4>;
 

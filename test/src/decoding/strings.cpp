@@ -13,7 +13,6 @@
 
 using namespace test;
 
-using span_t = cbor::buffer::const_span_t;
 using string_t = std::string;
 
 TEST_CASE("Strings - error cases", "[decoding, string, errors]") {

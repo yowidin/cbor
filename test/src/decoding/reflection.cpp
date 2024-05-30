@@ -16,8 +16,6 @@
 
 using namespace test;
 
-using span_t = cbor::buffer::const_span_t;
-
 namespace {
 #if CBOR_WITH(BOOST_PFR)
 struct pfr_via_type_id {

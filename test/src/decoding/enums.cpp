@@ -13,8 +13,6 @@
 
 using namespace test;
 
-using span_t = cbor::buffer::const_span_t;
-
 TEST_CASE("Enums - basic decoding", "[decoding, enums]") {
    enum class long_class : long {
       a = -10,

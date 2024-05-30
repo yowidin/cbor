@@ -16,8 +16,6 @@
 
 using namespace test;
 
-using span_t = cbor::buffer::const_span_t;
-
 TEST_CASE("Floats - basic decoding", "[decoding, floats]") {
    expect({0xF9, 0x00, 0x00}, 0.0f);
    expect({0xF9, 0x00, 0x00}, 0.0);

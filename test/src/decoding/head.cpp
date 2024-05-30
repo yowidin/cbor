@@ -13,7 +13,6 @@
 
 using namespace test;
 
-using span_t = cbor::buffer::const_span_t;
 using head_t = cbor::detail::head;
 
 TEST_CASE("Head decoding - buffer underflow", "[decoding, head, underflow]") {

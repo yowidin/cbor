@@ -12,8 +12,6 @@
 
 #include <iostream>
 
-using span_t = cbor::buffer::const_span_t;
-
 struct variant_a {
    std::int8_t a{};
    double b{};

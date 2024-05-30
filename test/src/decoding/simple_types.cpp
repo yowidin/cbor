@@ -15,8 +15,6 @@
 
 using namespace test;
 
-using span_t = cbor::buffer::const_span_t;
-
 TEST_CASE("Boolean - decoding errors", "[decoding, boolean, errors]") {
    SECTION("Not enough data to read head") {
       std::array<std::byte, 2> source{};

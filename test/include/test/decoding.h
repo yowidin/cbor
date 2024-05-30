@@ -17,6 +17,8 @@
 
 namespace test {
 
+using span_t = cbor::buffer::const_span_t;
+
 template <typename T>
 void decode(std::initializer_list<std::uint8_t> cbor, T &decoded) {
    const auto cbor_bytes = as_bytes(cbor);
