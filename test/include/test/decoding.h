@@ -18,73 +18,48 @@
 namespace test {
 
 template <typename T>
-concept Printable = requires(const T &t) { std::cerr << t; };
-
-template <typename T>
-void print(const char *msg, const T &v) {
-   std::cerr << msg << " for \"" << shp::hex(v) << "\":\n";
-}
-
-template <Printable T>
-void print(const char *msg, const T &v) {
-   std::cerr << msg << " for \"" << v << "\":\n";
-}
-
-template <typename T>
-void decode(std::initializer_list<std::uint8_t> cbor, T &decoded, T expected) {
-   std::vector<std::byte> as_bytes{};
-   for (auto v : cbor) {
-      as_bytes.push_back(static_cast<std::byte>(v));
-   }
-
-   cbor::buffer::const_span_t span{as_bytes};
+void decode(std::initializer_list<std::uint8_t> cbor, T &decoded) {
+   const auto cbor_bytes = as_bytes(cbor);
+   const cbor::buffer::const_span_t span{cbor_bytes};
    cbor::read_buffer buf{span};
 
    auto res = cbor::decode(buf, decoded);
 
-   auto print_error = [&](auto msg, auto res) {
-      print(msg, expected);
-      std::cerr << "Expected:\n";
-      std::cerr << shp::hex(expected) << "\n\nFound:\n";
-      std::cerr << shp::hex(decoded) << "\n\n";
-      std::cerr << "Error code: " << res.message() << std::endl;
-   };
-
-   if (res) {
-      print_error("Decoding failed", res);
-   }
+   INFO("Result: " << res.message());
    REQUIRE(!res);
 
-   const auto all_consumed = (buf.read_position() == as_bytes.size());
-   if (!all_consumed) {
-      print_error("Not all bytes consumed", res);
-      std::cerr << "Bytes consumed: " << buf.read_position() << " != " << as_bytes.size() << std::endl;
-   }
-   REQUIRE(all_consumed);
+   INFO("Consumed " << buf.read_position() << " out of " << cbor_bytes.size() << " bytes");
+   REQUIRE(buf.read_position() == cbor_bytes.size());
 }
 
 template <typename T>
 void expect(std::initializer_list<std::uint8_t> cbor, T expected) {
-   std::vector<std::byte> as_bytes{};
-   for (auto v : cbor) {
-      as_bytes.push_back(static_cast<std::byte>(v));
-   }
+   INFO("Decoding " << print(expected) << " from '" << hex(cbor) << "'");
 
    T decoded;
-   test::decode(cbor, decoded, expected);
+   test::decode(cbor, decoded);
 
-   auto print_error = [&](auto msg) {
-      print(msg, expected);
-      std::cerr << "Expected:\n";
-      std::cerr << shp::hex(expected) << "\n\nFound:\n";
-      std::cerr << shp::hex(decoded) << std::endl;
-   };
+   REQUIRE(expected == decoded);
+}
 
-   const auto full_match = (expected == decoded);
-   if (!full_match) {
-      print_error("Decoded value mismatch");
-   }
-   REQUIRE(full_match);
+template <typename cborT, typename DecodedT, typename ExpectedT>
+void compare_containers(const cborT &cbor, const DecodedT &decoded, const ExpectedT &expected) {
+   INFO("Comparing '" << hex(decoded) << "' with '" << hex(expected) << "' from '" << hex(cbor) << "'");
+
+   REQUIRE(std::size(decoded) == std::size(expected));
+
+   auto expected_bytes = as_bytes(expected);
+   auto decoded_bytes = as_bytes(decoded);
+
+   const auto d_begin = std::begin(decoded_bytes);
+   const auto d_end = std::end(decoded_bytes);
+
+   const auto e_begin = std::begin(expected_bytes);
+   const auto e_end = std::end(expected_bytes);
+
+   auto m = std::mismatch(d_begin, d_end, e_begin);
+   REQUIRE(m.first == d_end);
+   REQUIRE(m.second == e_end);
 }
 
 } // namespace test

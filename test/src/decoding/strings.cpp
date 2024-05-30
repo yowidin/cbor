@@ -43,41 +43,13 @@ TEST_CASE("Strings - error cases", "[decoding, string, errors]") {
 }
 
 TEST_CASE("Strings - basic decoding", "[decoding, string]") {
-   auto expect_string = [](std::initializer_list<std::uint8_t> cbor, std::string_view expected) {
-      auto cbor_bytes = as_bytes(cbor);
-      auto expected_bytes = as_bytes(expected);
+   using namespace std::literals::string_literals;
+   expect({0x60}, ""s);
+   expect({0x64, 0x31, 0x32, 0x33, 0x34}, "1234"s);
 
-      cbor::read_buffer buf{span_t{cbor_bytes}};
-
-      string_t v;
-      auto res = cbor::decode(buf, v);
-      if (res) {
-         std::cerr << "Decoding failed for:\n";
-         std::cerr << shp::hex(cbor_bytes) << "\n\n";
-         std::cerr << "Expected:\n";
-         std::cerr << '"' << expected << '"' << "\n\n";
-         std::cerr << "With error: " << res.message() << std::endl;
-      }
-      REQUIRE(res == cbor::error::success);
-
-      REQUIRE(v.size() == expected.size());
-
-      if (v != expected) {
-         std::cerr << "String missmatch for:\n";
-         std::cerr << shp::hex(cbor_bytes) << "\n\n";
-         std::cerr << "Expected:\n";
-         std::cerr << '"' << expected << '"' << "\n\nFound:\n";
-         std::cerr << v << std::endl;
-      }
-      REQUIRE(v == expected);
-   };
-
-   expect_string({0x60}, "");
-   expect_string({0x64, 0x31, 0x32, 0x33, 0x34}, "1234");
-
-   expect_string({0x61, 0x61}, "a");
-   expect_string({0x64, 0x49, 0x45, 0x54, 0x46}, "IETF");
-   expect_string({0x62, 0x22, 0x5C}, "\"\\");
-   expect_string({0x62, 0xC3, 0xBC}, "\u00fc");
-   expect_string({0x63, 0xE6, 0xB0, 0xB4}, "\u6c34");
+   expect({0x61, 0x61}, "a"s);
+   expect({0x64, 0x49, 0x45, 0x54, 0x46}, "IETF"s);
+   expect({0x62, 0x22, 0x5C}, R"("\)"s);
+   expect({0x62, 0xC3, 0xBC}, "\u00fc"s);
+   expect({0x63, 0xE6, 0xB0, 0xB4}, "\u6c34"s);
 }

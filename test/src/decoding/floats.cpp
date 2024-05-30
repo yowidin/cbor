@@ -77,7 +77,7 @@ float_class to_class(T v) {
 template <std::floating_point T>
 void expect_class(std::initializer_list<std::uint8_t> cbor, float_class fc) {
    T decoded;
-   decode(cbor, decoded, static_cast<T>(0.0));
+   decode(cbor, decoded);
 
    auto value_type = to_class(decoded);
    REQUIRE(value_type == fc);
