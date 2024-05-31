@@ -329,6 +329,9 @@ std::error_code try_decode_all(std::uint64_t type_id, read_buffer &buf, VariantT
 template <typename... T>
    requires AllWithTypeID<T...> && AllDecodable<T...>
 [[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, std::variant<T...> &v) {
+   static_assert(detail::all_alternatives_are_unique<T...>(),
+                 "TypeID duplicates are not allowed for variant alternatives");
+
    std::int64_t type_id;
    auto res = decode(buf, type_id);
    if (res) {

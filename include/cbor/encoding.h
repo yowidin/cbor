@@ -11,12 +11,15 @@
 #include <cbor/export.h>
 #include <cbor/type_traits.h>
 
+#include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <map>
 #include <optional>
 #include <type_traits>
+#include <variant>
 
 namespace cbor {
 
@@ -281,6 +284,38 @@ concept Encodable = requires(const T &t) { encode(std::declval<cbor::buffer &>()
 template <typename... T>
 concept AllEncodable = (Encodable<T> && ...);
 
+namespace detail {
+
+template <typename Current, std::size_t Extent>
+consteval bool store_type_id(std::size_t idx, std::array<std::uint64_t, Extent> &ids) {
+   ids[idx] = static_cast<std::uint64_t>(type_id_v<Current>);
+   return true;
+}
+
+template <typename VariantT, std::size_t... Ns>
+consteval bool collect_type_ids(std::array<std::uint64_t, std::variant_size_v<VariantT>> &ids,
+                                std::index_sequence<Ns...>) {
+   return ((store_type_id<std::variant_alternative_t<Ns, VariantT>>(Ns, ids)) && ...);
+}
+
+template <typename... T>
+   requires AllWithTypeID<T...>
+consteval bool all_alternatives_are_unique() {
+   using variant_t = std::variant<T...>;
+   const std::size_t num_alternatives = std::variant_size_v<variant_t>;
+   using type_idx_t = std::make_index_sequence<num_alternatives>;
+
+   std::array<std::uint64_t, num_alternatives> ids{};
+   collect_type_ids<variant_t>(ids, type_idx_t{});
+
+   std::sort(std::begin(ids), std::end(ids));
+
+   auto it = std::adjacent_find(std::begin(ids), std::end(ids));
+   return it == std::end(ids);
+}
+
+} // namespace detail
+
 /**
  * Encode a boxed variant: the encoding is prefixed with a type identifier, specified via a type_id template type
  * specialization.
@@ -298,6 +333,9 @@ concept AllEncodable = (Encodable<T> && ...);
 template <typename... T>
    requires AllWithTypeID<T...> && AllEncodable<T...>
 [[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const std::variant<T...> &v) {
+   static_assert(detail::all_alternatives_are_unique<T...>(),
+                 "TypeID duplicates are not allowed for variant alternatives");
+
    auto rollback_helper = buf.get_rollback_helper();
 
    const auto id = std::visit([](const auto &unwrapped) { return type_id_v<decltype(unwrapped)>; }, v);
