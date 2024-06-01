@@ -35,7 +35,6 @@ add_executable(cbor_tests
     src/decoding/variant.cpp
 
     src/encoding/array.cpp
-    src/encoding/boxed.cpp
     src/encoding/custom_encode.cpp
     src/encoding/float.cpp
     src/encoding/misc.cpp

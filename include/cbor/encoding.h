@@ -461,67 +461,6 @@ template <typename T, typename Allocator>
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Boxed Types
-////////////////////////////////////////////////////////////////////////////////
-template <WithTypeID T>
-struct boxed {
-   using value_t = T;
-   static constexpr auto type_id = type_id_v<T>;
-
-   explicit operator T &() { return v; };
-   explicit operator const T &() const { return v; };
-
-   value_t v;
-};
-
-template <typename T>
-struct is_boxed : std::false_type {};
-
-template <typename T>
-struct is_boxed<boxed<T>> : std::true_type {};
-
-template <typename T>
-inline constexpr auto is_boxed_v = is_boxed<std::remove_cvref_t<T>>::value;
-
-template <typename T>
-concept Boxed = is_boxed_v<std::remove_cvref_t<T>>;
-
-/**
- * Encode a boxed value.
- *
- * Boxed vlue is encoded as an array of two elements, where the first one is the type ID, and the second one is
- * the unboxed value.
- *
- * @tparam T value type
- * @param buf buffer to encode the value into.
- * @param v value to be encoded
- * @return operation result
- */
-template <typename T>
-[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const boxed<T> &v) {
-   auto rollback_helper = buf.get_rollback_helper();
-
-   auto res = encode_argument(buf, major_type::array, 2U);
-   if (res) {
-      return res;
-   }
-
-   res = encode(buf, v.type_id);
-   if (res) {
-      return res;
-   }
-
-   res = encode(buf, v.v);
-   if (res) {
-      return res;
-   }
-
-   rollback_helper.commit();
-
-   return res;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Dictionaries
 ////////////////////////////////////////////////////////////////////////////////
 template <Encodable Key, Encodable T, typename Compare, typename Allocator>
