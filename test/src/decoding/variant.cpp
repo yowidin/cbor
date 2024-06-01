@@ -109,6 +109,7 @@ TEST_CASE("Variant - basic decoding", "[decoding, variant]") {
 
    expect(
       {
+         0x82,             // Array of two elements
          0x19, 0xBE, 0xEF, // Type ID
          0x01,             // a = 1
          0xF9, 0x00, 0x00, // b = 0.0
@@ -118,6 +119,7 @@ TEST_CASE("Variant - basic decoding", "[decoding, variant]") {
 
    expect(
       {
+         0x82,             // Array of two elements
          0x19, 0xDE, 0xAF, // Type ID
          0xF6,             // a = nullopt
          0xF5,             // b = true
@@ -126,7 +128,7 @@ TEST_CASE("Variant - basic decoding", "[decoding, variant]") {
 }
 
 TEST_CASE("Variant - decoding error cases", "[decoding, variant, errors]") {
-   SECTION("Not enough data to read type_id head") {
+   SECTION("Not enough data to read array head") {
       std::array<std::byte, 2> source{};
       cbor::read_buffer buf{span_t{source.data(), 0}};
 
@@ -134,8 +136,24 @@ TEST_CASE("Variant - decoding error cases", "[decoding, variant, errors]") {
       REQUIRE(cbor::decode(buf, v) == cbor::error::buffer_underflow);
    }
 
+   SECTION("Not enough data to read type_id head") {
+      std::array<std::byte, 2> source{0x82_b};
+      cbor::read_buffer buf{span_t{source.data(), 1}};
+
+      value_t v;
+      REQUIRE(cbor::decode(buf, v) == cbor::error::buffer_underflow);
+   }
+
+   SECTION("Invalid array header") {
+      std::array source{0x81_b, 0x40_b};
+      cbor::read_buffer buf{span_t{source}};
+
+      value_t v;
+      REQUIRE(cbor::decode(buf, v) == cbor::error::decoding_error);
+   }
+
    SECTION("Invalid type_id type") {
-      std::array source{0x40_b};
+      std::array source{0x82_b, 0x40_b};
       cbor::read_buffer buf{span_t{source}};
 
       value_t v;
@@ -143,7 +161,7 @@ TEST_CASE("Variant - decoding error cases", "[decoding, variant, errors]") {
    }
 
    SECTION("Unexpected alternative type_id") {
-      std::array source{0x19_b, 0xBE_b, 0xED_b, 0xF9_b, 0x00_b, 0x00_b};
+      std::array source{0x82_b, 0x19_b, 0xBE_b, 0xED_b, 0xF9_b, 0x00_b, 0x00_b};
       cbor::read_buffer buf{span_t{source}};
 
       value_t v;
@@ -151,7 +169,7 @@ TEST_CASE("Variant - decoding error cases", "[decoding, variant, errors]") {
    }
 
    SECTION("Alternative decoding error should be propagated") {
-      std::array source{0x19_b, 0xBE_b, 0xEF_b, 0x01_b, 0xF9_b, 0x00_b, 0x00_b};
+      std::array source{0x82_b, 0x19_b, 0xBE_b, 0xEF_b, 0x01_b, 0xF9_b, 0x00_b, 0x00_b};
       cbor::read_buffer buf{span_t{source}};
 
       value_t v;

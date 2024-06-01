@@ -314,7 +314,10 @@ std::error_code try_decode_all(std::uint64_t type_id, read_buffer &buf, VariantT
 } // namespace detail
 
 /**
- * Decode a boxed variant.
+ * Decode a variant.
+ *
+ * Variants are encoded as an array of two elements, where the first one is a type identifier and the second one is
+ * the encoding of an alternative.
  *
  * This function intentionally doesn't support primitive variant types. It is intended to be used with structs and
  * classes, because the primitive types:
@@ -331,13 +334,26 @@ template <typename... T>
 [[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, std::variant<T...> &v) {
    static_assert(detail::all_alternatives_are_unique<T...>(),
                  "TypeID duplicates are not allowed for variant alternatives");
-
-   std::int64_t type_id;
-   auto res = decode(buf, type_id);
+   // Decode the array header
+   std::byte head;
+   auto res = buf.read(head);
    if (res) {
       return res;
    }
 
+   const auto array_byte = static_cast<std::byte>(major_type::array) | static_cast<std::byte>(2);
+   if (head != array_byte) {
+      return error::decoding_error;
+   }
+
+   // Decode the type ID
+   std::int64_t type_id;
+   res = decode(buf, type_id);
+   if (res) {
+      return res;
+   }
+
+   // Use the type id to decode a currently active alternative
    using type_idx_t = std::make_index_sequence<std::variant_size_v<std::remove_cvref_t<decltype(v)>>>;
    res = detail::try_decode_all(type_id, buf, v, type_idx_t{});
    return res;

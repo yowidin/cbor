@@ -317,8 +317,10 @@ consteval bool all_alternatives_are_unique() {
 } // namespace detail
 
 /**
- * Encode a boxed variant: the encoding is prefixed with a type identifier, specified via a type_id template type
- * specialization.
+ * Encode a variant.
+ *
+ * Variants are encoded as an array of two elements, where the first one is a type identifier, specified via a type_id
+ * template type specialization, and the second one is the encoding of the currently active alternative.
  *
  * This function intentionally doesn't support primitive variant types. It is intended to be used with structs and
  * classes, because the primitive types:
@@ -338,12 +340,20 @@ template <typename... T>
 
    auto rollback_helper = buf.get_rollback_helper();
 
-   const auto id = std::visit([](const auto &unwrapped) { return type_id_v<decltype(unwrapped)>; }, v);
-   auto res = encode(buf, id);
+   // Start an array
+   auto res = encode_argument(buf, major_type::array, 2U);
    if (res) {
       return res;
    }
 
+   // Encode the type identifier
+   const auto id = std::visit([](const auto &unwrapped) { return type_id_v<decltype(unwrapped)>; }, v);
+   res = encode(buf, id);
+   if (res) {
+      return res;
+   }
+
+   // Encode the value itself
    res = std::visit([&buf](const auto &unwrapped) { return encode(buf, unwrapped); }, v);
    if (res) {
       return res;

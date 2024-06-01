@@ -103,6 +103,7 @@ TEST_CASE("Variant - basic encoding", "[encoding, variant]") {
 
    check_encoding(first,
                   {
+                     0x82,             // Array of two elements
                      0x19, 0xBE, 0xEF, // Type ID
                      0x01,             // a = 1
                      0xF9, 0x00, 0x00, // b = 0.0
@@ -111,6 +112,7 @@ TEST_CASE("Variant - basic encoding", "[encoding, variant]") {
 
    check_encoding(second,
                   {
+                     0x82,             // Array of two elements
                      0x19, 0xDE, 0xAF, // Type ID
                      0xF6,             // a = nullopt
                      0xF5,             // b = true
@@ -122,7 +124,7 @@ TEST_CASE("Variant - encoding rollback on failure", "[encoding, variant, rollbac
 
    const value_t var = variant_b{.a = std::nullopt, .b = true};
 
-   SECTION("Not enough space for the type id") {
+   SECTION("Not enough space for the array header") {
       std::vector<std::byte> target;
       cbor::dynamic_buffer buf{target, 0};
 
@@ -131,9 +133,18 @@ TEST_CASE("Variant - encoding rollback on failure", "[encoding, variant, rollbac
       REQUIRE(buf.size() == 0);
    }
 
+   SECTION("Not enough space for the type id") {
+      std::vector<std::byte> target;
+      cbor::dynamic_buffer buf{target, 1};
+
+      std::error_code ec = cbor::encode(buf, var);
+      REQUIRE(ec == cbor::error::buffer_overflow);
+      REQUIRE(buf.size() == 0);
+   }
+
    SECTION("Not enough space for all members") {
-      std::array<std::byte, 4> target{};
-      cbor::static_buffer buf{target};
+      std::vector<std::byte> target;
+      cbor::dynamic_buffer buf{target, 4};
 
       std::error_code ec = cbor::encode(buf, var);
       REQUIRE(ec == cbor::error::buffer_overflow);
