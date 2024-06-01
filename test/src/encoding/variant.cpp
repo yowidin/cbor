@@ -33,7 +33,12 @@ struct type_id<variant_a> : std::integral_constant<std::uint64_t, 0xBEEF> {};
 [[nodiscard]] std::error_code encode(buffer &buf, const variant_a &v) {
    auto rollback_helper = buf.get_rollback_helper();
 
-   auto res = encode(buf, v.a);
+   auto res = encode_argument(buf, major_type::array, 3U);
+   if (res) {
+      return res;
+   }
+
+   res = encode(buf, v.a);
    if (res) {
       return res;
    }
@@ -59,7 +64,12 @@ struct type_id<variant_b> : std::integral_constant<std::uint64_t, 0xDEAF> {};
 [[nodiscard]] std::error_code encode(buffer &buf, const variant_b &v) {
    auto rollback_helper = buf.get_rollback_helper();
 
-   auto res = encode(buf, v.a);
+   auto res = encode_argument(buf, major_type::array, 2U);
+   if (res) {
+      return res;
+   }
+
+   res = encode(buf, v.a);
    if (res) {
       return res;
    }
@@ -101,19 +111,23 @@ TEST_CASE("Variant - basic encoding", "[encoding, variant]") {
    value_t first = variant_a{.a = 1, .b = 0.0, .c = "a"};
    const value_t second = variant_b{.a = std::nullopt, .b = true};
 
+   // [type_id, [a, b, c]]
    check_encoding(first,
                   {
                      0x82,             // Array of two elements
                      0x19, 0xBE, 0xEF, // Type ID
+                     0x83,             // Array of three elements
                      0x01,             // a = 1
                      0xF9, 0x00, 0x00, // b = 0.0
                      0x61, 0x61        // c = "a"
                   });
 
+   // [type_id, [a, b]]
    check_encoding(second,
                   {
                      0x82,             // Array of two elements
                      0x19, 0xDE, 0xAF, // Type ID
+                     0x82,             // Array of two elements
                      0xF6,             // a = nullopt
                      0xF5,             // b = true
                   });

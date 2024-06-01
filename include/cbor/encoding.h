@@ -388,12 +388,31 @@ std::error_code encode_all(buffer &buf, const T &v, std::index_sequence<Ns...>) 
 }
 } // namespace detail
 
+/**
+ * Encode a struct.
+ *
+ * Structs are encoded as an array of N elements, where N is the number of fields.
+ * Each member of a struct should be encodable, and the following function overloads should be specified:
+ * - std::size_t get_member_count<T>()
+ * - const auto &get_member<MemberIdx>(const T &t)
+ *
+ * @tparam T struct type.
+ * @param buf Buffer to encode the value into.
+ * @param v Value to be encoded.
+ * @return Operation result.
+ */
 template <EncodableStruct T>
 [[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const T &v) {
    auto rollback_helper = buf.get_rollback_helper();
 
+   const auto size = get_member_count<T>();
+   auto res = encode_argument(buf, major_type::array, size);
+   if (res) {
+      return res;
+   }
+
    using member_idx_t = std::make_index_sequence<get_member_count<T>()>;
-   auto res = detail::encode_all(buf, v, member_idx_t{});
+   res = detail::encode_all(buf, v, member_idx_t{});
    if (res) {
       return res;
    }

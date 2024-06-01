@@ -75,20 +75,20 @@ const auto &cbor::get_member<3>(const custom_reflection &v) {
 #if CBOR_WITH(BOOST_PFR)
 TEST_CASE("Struct - encoding with PFR reflection", "[encoding, struct]") {
    // Defining a type_id overload should be enough to whitelist a struct with PFR
-   check_encoding(pfr_via_type_id{10, 20}, {0x0A, 0x14});
+   check_encoding(pfr_via_type_id{10, 20}, {0x82, 0x0A, 0x14});
 
    // Defining a consteval function should be enough to whitelist a struct with PFR
-   check_encoding(pfr_via_consteval{5, 7, {1, 2}, {3, 4}}, {0x05, 0x07, 0x82, 0x01, 0x02, 0x82, 0x03, 0x04});
+   check_encoding(pfr_via_consteval{5, 7, {1, 2}, {3, 4}}, {0x84, 0x05, 0x07, 0x82, 0x01, 0x02, 0x82, 0x03, 0x04});
 }
 #endif // CBOR_WITH(BOOST_PFR)
 
 TEST_CASE("Struct - encoding with custom reflection", "[encoding, struct]") {
-   check_encoding(custom_reflection{10, 20, {1, 2}, {3, 4}}, {0x0A, 0x14, 0x82, 0x01, 0x02, 0x82, 0x03, 0x04});
+   check_encoding(custom_reflection{10, 20, {1, 2}, {3, 4}}, {0x84, 0x0A, 0x14, 0x82, 0x01, 0x02, 0x82, 0x03, 0x04});
 }
 
 TEST_CASE("Struct - encoding with custom reflection and wrapped in optional", "[encoding, struct, optional]") {
    check_encoding(std::optional<custom_reflection>{{10, 20, {1, 2}, {3, 4}}},
-                  {0x0A, 0x14, 0x82, 0x01, 0x02, 0x82, 0x03, 0x04});
+                  {0x84, 0x0A, 0x14, 0x82, 0x01, 0x02, 0x82, 0x03, 0x04});
 
    check_encoding(std::optional<custom_reflection>{}, {0xF6});
 }
@@ -97,7 +97,7 @@ TEST_CASE("Struct - encoding rollback on failure", "[encoding, struct, rollback]
    // {0x0A, 0x14, 0x82, 0x01, 0x02, 0x82, 0x03, 0x04}
    const custom_reflection v{10, 20, {1, 2}, {3, 4}};
 
-   SECTION("No space for the first member") {
+   SECTION("No space for the array") {
       std::vector<std::byte> target{};
       cbor::dynamic_buffer buf{target, 0};
 
@@ -107,9 +107,19 @@ TEST_CASE("Struct - encoding rollback on failure", "[encoding, struct, rollback]
       REQUIRE(target.empty());
    }
 
+   SECTION("No space for the first member") {
+      std::vector<std::byte> target{};
+      cbor::dynamic_buffer buf{target, 1};
+
+      std::error_code ec;
+      ec = cbor::encode(buf, v);
+      REQUIRE(ec == cbor::error::buffer_overflow);
+      REQUIRE(target.empty());
+   }
+
    SECTION("No space for the last member") {
       std::vector<std::byte> target{};
-      cbor::dynamic_buffer buf{target, 7};
+      cbor::dynamic_buffer buf{target, 8};
 
       std::error_code ec;
       ec = cbor::encode(buf, v);

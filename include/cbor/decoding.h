@@ -383,10 +383,41 @@ std::error_code decode_all(read_buffer &buf, T &v, std::index_sequence<Ns...>) {
 }
 } // namespace detail
 
+/**
+ * Decode a struct.
+ *
+ * Structs are encoded as an array of N elements, where N is the number of fields.
+ * Each member of a struct should be decodable, and the following function overloads should be specified:
+ * - std::size_t get_member_count<T>()
+ * - auto &get_member_non_const<MemberIdx>(T &t)
+ *
+ * @tparam T struct type.
+ * @param[in] buf Buffer to decode the value from.
+ * @param[out] v Value to be encoded.
+ * @return Operation result.
+ */
 template <DecodableStruct T>
 [[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, T &v) {
+   // Decode and check the number of fields
+   detail::head head{};
+   auto res = head.read(buf);
+   if (res) {
+      return res;
+   }
+
+   if (head.type != major_type::array) {
+      return error::unexpected_type;
+   }
+
+   const auto num_fields = get_member_count<T>();
+   auto u64 = head.decode_argument();
+   if (u64 != num_fields) {
+      return error::decoding_error;
+   }
+
+   // Decode all the fields
    using member_idx_t = std::make_index_sequence<get_member_count<T>()>;
-   auto res = detail::decode_all(buf, v, member_idx_t{});
+   res = detail::decode_all(buf, v, member_idx_t{});
    if (res) {
       return res;
    }

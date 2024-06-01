@@ -89,42 +89,53 @@ auto &cbor::get_member_non_const<3>(custom_reflection &v) {
 #if CBOR_WITH(BOOST_PFR)
 TEST_CASE("Struct - decoding with PFR reflection", "[decoding, struct]") {
    // Defining a type_id overload should be enough to whitelist a struct with PFR
-   expect({0x0A, 0x14}, pfr_via_type_id{10, 20});
+   expect({0x82, 0x0A, 0x14}, pfr_via_type_id{10, 20});
 
    // Defining a consteval function should be enough to whitelist a struct with PFR
-   expect({0x05, 0x07, 0x42, 0x01, 0x02, 0x42, 0x03, 0x04}, pfr_via_consteval{5, 7, {1_b, 2_b}, {3_b, 4_b}});
+   expect({0x84, 0x05, 0x07, 0x42, 0x01, 0x02, 0x42, 0x03, 0x04}, pfr_via_consteval{5, 7, {1_b, 2_b}, {3_b, 4_b}});
 }
 #endif // CBOR_WITH(BOOST_PFR)
 
 TEST_CASE("Struct - decoding with custom reflection", "[decoding, struct]") {
-   expect({0x0A, 0x14, 0x42, 0x01, 0x02, 0x42, 0x03, 0x04}, custom_reflection{10, 20, {1_b, 2_b}, {3_b, 4_b}});
+   expect({0x84, 0x0A, 0x14, 0x42, 0x01, 0x02, 0x42, 0x03, 0x04}, custom_reflection{10, 20, {1_b, 2_b}, {3_b, 4_b}});
 }
 
 TEST_CASE("Struct - decoding with custom reflection and rapped in optional", "[decoding, struct]") {
    using optional_t = std::optional<custom_reflection>;
-   expect({0x0A, 0x14, 0x42, 0x01, 0x02, 0x42, 0x03, 0x04}, optional_t{{10, 20, {1_b, 2_b}, {3_b, 4_b}}});
+   expect({0x84, 0x0A, 0x14, 0x42, 0x01, 0x02, 0x42, 0x03, 0x04}, optional_t{{10, 20, {1_b, 2_b}, {3_b, 4_b}}});
    expect({0xF6}, optional_t{});
 }
 
 TEST_CASE("Struct - decoding error cases", "[decoding, struct, errors]") {
-   std::array<std::byte, 2> source{};
-   cbor::read_buffer buf{span_t{source.data(), 0}};
+   SECTION("Not enough data to read the array") {
+      std::array<std::byte, 2> source{};
+      cbor::read_buffer buf{span_t{source.data(), 0}};
 
-   SECTION("Custom - not enough data to read the first member's head") {
       custom_reflection v{};
       REQUIRE(cbor::decode(buf, v) == cbor::error::buffer_underflow);
    }
 
-#if CBOR_WITH(BOOST_PFR)
-   SECTION("PFR TypeID - not enough data to read the first member's head") {
-      pfr_via_type_id v{};
-      REQUIRE(cbor::decode(buf, v) == cbor::error::buffer_underflow);
+   SECTION("Invalid array type") {
+      std::array<std::byte, 2> source{0x02_b};
+      cbor::read_buffer buf{span_t{source.data(), 1}};
+
+      custom_reflection v{};
+      REQUIRE(cbor::decode(buf, v) == cbor::error::unexpected_type);
    }
 
-   SECTION("PFR ConstEval - not enough data to read the first member's head") {
-      pfr_via_consteval v{};
+   SECTION("Invalid number of fields") {
+      std::array<std::byte, 2> source{0x82_b};
+      cbor::read_buffer buf{span_t{source.data(), 1}};
+
+      custom_reflection v{};
+      REQUIRE(cbor::decode(buf, v) == cbor::error::decoding_error);
+   }
+
+   SECTION("Custom - not enough data to read the first member's head") {
+      std::array source{0x84_b, 0x0A_b, 0x14_b, 0x42_b, 0x01_b, 0x02_b, 0x42_b, 0x03_b, 0x04_b};
+      cbor::read_buffer buf{span_t{source.data(), 1}};
+
+      custom_reflection v{};
       REQUIRE(cbor::decode(buf, v) == cbor::error::buffer_underflow);
    }
-#endif // CBOR_WITH(BOOST_PFR)
 }
-
