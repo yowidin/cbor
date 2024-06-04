@@ -24,6 +24,7 @@ add_executable(cbor_tests
     src/buffer.cpp
     src/error.cpp
 
+    src/decoding/arrays.cpp
     src/decoding/byte_arrays.cpp
     src/decoding/enums.cpp
     src/decoding/floats.cpp

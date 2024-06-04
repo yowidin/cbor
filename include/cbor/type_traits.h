@@ -85,6 +85,21 @@ template <typename T>
 concept Enum = std::is_enum_v<T>;
 
 template <typename T>
+struct is_byte : std::bool_constant<false> {};
+
+template <>
+struct is_byte<std::byte> : std::bool_constant<true> {};
+
+template <typename T>
+using is_byte_t = typename is_byte<std::remove_cvref_t<T>>::type;
+
+template <typename T>
+inline constexpr bool is_byte_v = is_byte_t<std::remove_cvref_t<T>>::value;
+
+template <typename T>
+concept IsByte = is_byte_v<T>;
+
+template <typename T>
 concept WithTypeID = requires(T) {
    { type_id<std::remove_cvref_t<T>>::value } -> Int;
 };

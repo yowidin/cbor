@@ -425,4 +425,97 @@ template <DecodableStruct T>
    return res;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Arrays
+////////////////////////////////////////////////////////////////////////////////
+template <typename T>
+concept DecodableNonByte = Decodable<T> && !IsByte<T>;
+
+template <DecodableNonByte T, std::size_t Extent>
+[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, std::span<T, Extent> v) {
+   using span_t = std::span<T, Extent>;
+   using span_size_t = typename span_t::size_type;
+   static_assert(max_int_v<std::uint64_t> <= max_int_v<span_size_t>);
+
+   detail::head head{};
+   auto res = head.read(buf);
+   if (res) {
+      return res;
+   }
+
+   if (head.type != major_type::array) {
+      return error::unexpected_type;
+   }
+
+   auto u64 = head.decode_argument();
+   if (u64 > v.size()) {
+      return error::buffer_overflow;
+   }
+
+   if (u64 < v.size()) {
+      return error::buffer_underflow;
+   }
+
+   if (u64 == 0) {
+      return error::success;
+   }
+
+   for (span_size_t i = 0; i < u64; ++i) {
+      res = decode(buf, v[i]);
+      if (res) {
+         return res;
+      }
+   }
+
+   return res;
+}
+
+template <DecodableNonByte T, typename Allocator>
+[[nodiscard]] CBOR_EXPORT std::error_code decode(
+   read_buffer &buf,
+   std::vector<T, Allocator> &v,
+   typename std::vector<T, Allocator>::size_type max_size = max_int_v<typename std::vector<T, Allocator>::size_type>) {
+   using vector_t = std::vector<T, Allocator>;
+   using vector_size_t = typename vector_t::size_type;
+   static_assert(max_int_v<std::uint64_t> <= max_int_v<vector_size_t>);
+
+   detail::head head{};
+   auto res = head.read(buf);
+   if (res) {
+      return res;
+   }
+
+   if (head.type != major_type::array) {
+      return error::unexpected_type;
+   }
+
+   auto u64 = head.decode_argument();
+   if (u64 > max_size) {
+      return error::buffer_overflow;
+   }
+
+   v.resize(u64);
+
+   if (u64 == 0) {
+      return error::success;
+   }
+
+   for (vector_size_t i = 0; i < u64; ++i) {
+      res = decode(buf, v[i]);
+      if (res) {
+         return res;
+      }
+   }
+
+   return error::success;
+}
+
+template <Decodable T, std::size_t Extent>
+[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, std::array<T, Extent> &v) {
+   using array_t = std::array<T, Extent>;
+   using array_size_t = typename array_t::size_type;
+   static_assert(max_int_v<std::uint64_t> <= max_int_v<array_size_t>);
+   return decode(buf, std::span{v});
+}
+
 } // namespace cbor

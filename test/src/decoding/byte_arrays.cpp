@@ -42,7 +42,7 @@ TEST_CASE("Byte arrays - vector error cases", "[decoding, byte_array, vector, er
    }
 }
 
-TEST_CASE("Byte arrays - array error cases", "[decoding, byte_array, vector, errors]") {
+TEST_CASE("Byte arrays - array error cases", "[decoding, byte_array, errors]") {
    SECTION("Not enough data to read head") {
       std::array<std::byte, 2> source{};
       cbor::read_buffer buf{span_t{source.data(), 0}};

@@ -427,7 +427,7 @@ template <EncodableStruct T>
 ////////////////////////////////////////////////////////////////////////////////
 template <typename T, std::size_t Extent>
    requires Encodable<T>
-[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, std::span<T, Extent> v) {
+[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, std::span<const T, Extent> v) {
    auto rollback_helper = buf.get_rollback_helper();
 
    const auto size = v.size();
