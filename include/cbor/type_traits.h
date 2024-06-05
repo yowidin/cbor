@@ -29,6 +29,12 @@ inline constexpr auto min_int_v = std::numeric_limits<T>::min();
 template <typename T>
 inline constexpr auto max_int_v = std::numeric_limits<T>::max();
 
+template <typename T>
+using max_size_t = typename std::remove_cvref_t<T>::size_type;
+
+template <typename T>
+inline constexpr auto max_size_v = max_int_v<max_size_t<T>>;
+
 /**
  * Type ID trait.
  *

@@ -126,13 +126,11 @@ template <Enum T>
 ////////////////////////////////////////////////////////////////////////////////
 /// Byte Arrays
 ////////////////////////////////////////////////////////////////////////////////
-template <typename Allocator>
+template <typename Allocator, typename VectorT = std::vector<std::byte, Allocator>>
 [[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf,
                                                  std::vector<std::byte, Allocator> &v,
-                                                 typename std::vector<std::byte, Allocator>::size_type max_size =
-                                                    max_int_v<typename std::vector<std::byte, Allocator>::size_type>) {
-   using vector_t = std::vector<std::byte, Allocator>;
-   static_assert(max_int_v<std::uint64_t> <= max_int_v<typename vector_t::size_type>);
+                                                 max_size_t<VectorT> max_size = max_size_v<VectorT>) {
+   static_assert(max_int_v<std::uint64_t> <= max_size_v<VectorT>);
 
    detail::head head{};
    auto res = head.read(buf);
@@ -161,7 +159,7 @@ template <typename Allocator>
 template <std::size_t Extent>
 [[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, std::array<std::byte, Extent> &v) {
    using array_t = std::array<std::byte, Extent>;
-   static_assert(max_int_v<std::uint64_t> <= max_int_v<typename array_t::size_type>);
+   static_assert(max_int_v<std::uint64_t> <= max_size_v<array_t>);
 
    detail::head head{};
    auto res = head.read(buf);
@@ -192,15 +190,15 @@ template <std::size_t Extent>
 ////////////////////////////////////////////////////////////////////////////////
 /// Strings
 ////////////////////////////////////////////////////////////////////////////////
-template <typename CharT, typename Traits, typename Allocator>
-[[nodiscard]] CBOR_EXPORT std::error_code decode(
-   read_buffer &buf,
-   std::basic_string<CharT, Traits, Allocator> &v,
-   typename std::basic_string<CharT, Traits, Allocator>::size_type max_size =
-      max_int_v<typename std::basic_string<CharT, Traits, Allocator>::size_type>) {
-   using string_t = std::basic_string<CharT, Traits, Allocator>;
-   static_assert(max_int_v<std::uint64_t> <= max_int_v<typename string_t::size_type>);
-   static_assert(sizeof(typename string_t::value_type) == sizeof(std::byte));
+template <typename CharT,
+          typename Traits,
+          typename Allocator,
+          typename StringT = std::basic_string<CharT, Traits, Allocator>>
+[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf,
+                                                 std::basic_string<CharT, Traits, Allocator> &v,
+                                                 max_size_t<StringT> max_size = max_size_v<StringT>) {
+   static_assert(max_int_v<std::uint64_t> <= max_size_v<StringT>);
+   static_assert(sizeof(typename StringT::value_type) == sizeof(std::byte));
 
    detail::head head{};
    auto res = head.read(buf);
@@ -470,14 +468,11 @@ template <DecodableNonByte T, std::size_t Extent>
    return res;
 }
 
-template <DecodableNonByte T, typename Allocator>
-[[nodiscard]] CBOR_EXPORT std::error_code decode(
-   read_buffer &buf,
-   std::vector<T, Allocator> &v,
-   typename std::vector<T, Allocator>::size_type max_size = max_int_v<typename std::vector<T, Allocator>::size_type>) {
-   using vector_t = std::vector<T, Allocator>;
-   using vector_size_t = typename vector_t::size_type;
-   static_assert(max_int_v<std::uint64_t> <= max_int_v<vector_size_t>);
+template <DecodableNonByte T, typename Allocator, typename VectorT = std::vector<T, Allocator>>
+[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf,
+                                                 std::vector<T, Allocator> &v,
+                                                 max_size_t<VectorT> max_size = max_size_v<VectorT>) {
+   static_assert(max_int_v<std::uint64_t> <= max_size_v<VectorT>);
 
    detail::head head{};
    auto res = head.read(buf);
@@ -500,7 +495,7 @@ template <DecodableNonByte T, typename Allocator>
       return error::success;
    }
 
-   for (vector_size_t i = 0; i < u64; ++i) {
+   for (max_size_t<VectorT> i = 0; i < u64; ++i) {
       res = decode(buf, v[i]);
       if (res) {
          return res;
