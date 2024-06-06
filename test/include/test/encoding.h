@@ -12,6 +12,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <iostream>
+#include <map>
 
 namespace test {
 
@@ -31,8 +32,24 @@ auto hex(const T &v) {
 ////////////////////////////////////////////////////////////////////////////////
 /// Value printers: either as is (if printable), or as hex
 ////////////////////////////////////////////////////////////////////////////////
+template <typename K, typename V>
+std::ostream &operator<<(std::ostream &os, const std::pair<K, V> &kv) {
+   return os << "[" << kv.first << ", " << kv.second << "]";
+}
+
+template <typename Key,
+          typename T,
+          class Compare = std::less<Key>,
+          class Allocator = std::allocator<std::pair<const Key, T>>>
+std::ostream &operator<<(std::ostream &os, const std::map<Key, T, Compare, Allocator> &m) {
+   for (const auto &kv : m) {
+      os << kv;
+   }
+   return os;
+}
+
 template <typename T>
-concept Printable = requires(const T &t) { std::declval<std::ostream>() << t; };
+concept Printable = requires(const T &t) { std::declval<std::ostream &>() << t; };
 
 template <typename T>
 struct ValuePrinter {

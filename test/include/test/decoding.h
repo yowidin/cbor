@@ -35,7 +35,7 @@ void decode(std::initializer_list<std::uint8_t> cbor, T &decoded) {
 }
 
 template <typename T>
-void expect(std::initializer_list<std::uint8_t> cbor, T expected) {
+void expect(std::initializer_list<std::uint8_t> cbor, const T &expected) {
    INFO("Decoding " << print(expected) << " from '" << hex(cbor) << "'");
 
    T decoded;

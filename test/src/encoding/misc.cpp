@@ -9,8 +9,10 @@
 
 #include <test/encoding.h>
 
-#include <functional>
 #include <iostream>
+
+#include <map>
+#include <unordered_map>
 
 using namespace test;
 
@@ -240,6 +242,17 @@ TEST_CASE("Dictionary - basic encoding", "[encoding, dictionary]") {
    check_encoding(map<string, string>{{"a", "A"}, {"b", "B"}, {"c", "C"}, {"d", "D"}, {"e", "E"}},
                   {0xA5, 0x61, 0x61, 0x61, 0x41, 0x61, 0x62, 0x61, 0x42, 0x61, 0x63,
                    0x61, 0x43, 0x61, 0x64, 0x61, 0x44, 0x61, 0x65, 0x61, 0x45});
+
+   SECTION("Unordered map sanity check") {
+      vector<byte> sorted{0xA2_b, 0x01_b, 0x61_b, 0x31_b, 0x02_b, 0x62_b, 0x32_b, 0x32_b};
+      vector<byte> unsorted{0xA2_b, 0x02_b, 0x62_b, 0x32_b, 0x32_b, 0x01_b, 0x61_b, 0x31_b};
+      vector<byte> target{};
+      cbor::dynamic_buffer buf{target};
+
+      unordered_map<int, string> v{{1, "1"}, {2, "22"}};
+      REQUIRE(cbor::encode(buf, v) == cbor::error::success);
+      REQUIRE((target == sorted || target == unsorted));
+   }
 }
 
 TEST_CASE("Dictionary - encoding rollback on failure", "[encoding, dictionary, rollback]") {

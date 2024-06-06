@@ -16,7 +16,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
-#include <map>
 #include <optional>
 #include <type_traits>
 #include <variant>
@@ -463,8 +462,11 @@ template <typename T, typename Allocator>
 ////////////////////////////////////////////////////////////////////////////////
 /// Dictionaries
 ////////////////////////////////////////////////////////////////////////////////
-template <Encodable Key, Encodable T, typename Compare, typename Allocator>
-[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const std::map<Key, T, Compare, Allocator> &v) {
+template <typename T>
+concept EncodableDictionary = Dictionary<T> && Encodable<key_type_t<T>> && Encodable<mapped_type_t<T>>;
+
+template <EncodableDictionary T>
+[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const T &v) {
    auto rollback_helper = buf.get_rollback_helper();
 
    // Encode size

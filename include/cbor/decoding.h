@@ -513,4 +513,54 @@ template <Decodable T, std::size_t Extent>
    return decode(buf, std::span{v});
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Dictionaries
+////////////////////////////////////////////////////////////////////////////////
+template <typename T>
+concept DecodableDictionary = Dictionary<T> && Decodable<key_type_t<T>> && Decodable<mapped_type_t<T>>;
+
+template <DecodableDictionary T>
+[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, T &v, max_size_t<T> max_size = max_size_v<T>) {
+   static_assert(max_int_v<std::uint64_t> <= max_size_v<T>);
+
+   detail::head head{};
+   auto res = head.read(buf);
+   if (res) {
+      return res;
+   }
+
+   // Decode size
+   if (head.type != major_type::dictionary) {
+      return error::unexpected_type;
+   }
+
+   auto num_pairs = head.decode_argument();
+   if (num_pairs > max_size) {
+      return error::buffer_overflow;
+   }
+
+   // Decode values
+   if (num_pairs == 0) {
+      return error::success;
+   }
+
+   for (max_size_t<T> i = 0; i < num_pairs; ++i) {
+      key_type_t<T> key;
+      res = decode(buf, key);
+      if (res) {
+         return res;
+      }
+
+      mapped_type_t<T> value;
+      res = decode(buf, value);
+      if (res) {
+         return res;
+      }
+
+      v.insert(value_type_t<T>{std::move(key), std::move(value)});
+   }
+
+   return error::success;
+}
+
 } // namespace cbor

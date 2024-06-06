@@ -35,6 +35,18 @@ using max_size_t = typename std::remove_cvref_t<T>::size_type;
 template <typename T>
 inline constexpr auto max_size_v = max_int_v<max_size_t<T>>;
 
+template <typename T>
+using value_type_t = typename std::remove_cvref_t<T>::value_type;
+
+template <typename T>
+using key_type_t = typename std::remove_cvref_t<T>::key_type;
+
+template <typename T>
+using mapped_type_t = typename std::remove_cvref_t<T>::mapped_type;
+
+template <typename T>
+using iterator_t = typename std::remove_cvref_t<T>::iterator;
+
 /**
  * Type ID trait.
  *
@@ -112,6 +124,14 @@ concept WithTypeID = requires(T) {
 
 template <typename... T>
 concept AllWithTypeID = (WithTypeID<T> && ...);
+
+template <typename T>
+concept AssociativeContainer = std::is_same_v<value_type_t<T>, std::pair<const key_type_t<T>, mapped_type_t<T>>>;
+
+template <typename T>
+concept Dictionary = AssociativeContainer<T> && requires(T &v) {
+   { v.insert(std::declval<value_type_t<T> &&>()) };
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Structs
