@@ -4,8 +4,7 @@
  * @date   Jun 08, 2024
  */
 
-#include <cbor/decoding.h>
-#include <cbor/encoding.h>
+#include <cbor/cbor.h>
 #include <shp/shp.h>
 
 #include <cstdint>

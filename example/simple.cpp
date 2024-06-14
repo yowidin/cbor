@@ -1,44 +1,9 @@
-# CBOR C++ Library ![status](https://github.com/yowidin/cbor/actions/workflows/main.yml/badge.svg)
+/**
+ * @file   main.cpp
+ * @author Dennis Sitelew 
+ * @date   Jun 08, 2024
+ */
 
-`cbor` is a C++20 library designed to encode and decode CBOR (Concise Binary Object Representation) sequences.
-The library optionally supports reflection via [Boost PFR](https://github.com/boostorg/pfr).
-
-## Usage
-
-The recommended way to include this library in your project is to use the CMake's `FetchContent` functionality, for
-example:
-
-```cmake
-cmake_minimum_required(VERSION 3.16)
-project(cbor_example)
-
-set(CMAKE_CXX_STANDARD 20)
-
-include(FetchContent)
-
-# Fetch the CBOR library
-FetchContent_Declare(
-    cbor
-    GIT_REPOSITORY https://github.com/yowidin/cbor
-    GIT_TAG master
-)
-FetchContent_MakeAvailable(cbor)
-
-# Also fetch the Simple Hex Printer Library for easier printing (not required).
-FetchContent_Declare(
-    shp
-    GIT_REPOSITORY https://github.com/yowidin/simple-hex-printer
-    GIT_TAG master
-)
-FetchContent_MakeAvailable(shp)
-
-add_executable(example main.cpp)
-target_link_libraries(example PRIVATE CBOR::library SimpleHexPrinter::library)
-```
-
-And then in a C++ file:
-
-```cpp
 #include <cbor/cbor.h>
 #include <shp/shp.h>
 
@@ -111,14 +76,3 @@ int main(int, char **) {
 
    return 0;
 }
-```
-
-For more examples, please refer to the [example](./example) directory in the repository.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE.txt](./LICENSE.txt) file for details.
-
-## Feedback
-
-Feel free to provide feedback or ask questions by opening an issue on the repository.

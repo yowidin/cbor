@@ -2,7 +2,8 @@ include(CTest)
 
 set(CMAKE_CXX_STANDARD 20)
 
-Include(FetchContent)
+include(FetchContent)
+set(CATCH_BUILD_TESTING OFF)
 set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 FetchContent_Declare(
     Catch2
@@ -52,4 +53,4 @@ target_link_libraries(cbor_tests
 
 target_include_directories(cbor_tests PRIVATE include)
 
-add_test(NAME Catch2Tests COMMAND "tests")
+add_test(NAME CBORTests COMMAND "cbor_tests")

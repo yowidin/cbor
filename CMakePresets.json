@@ -117,6 +117,7 @@
       "name": "default",
       "configurePreset": "default",
       "output": {"outputOnFailure": true},
+      "filter": { "include": {"name":  "CBORTests"} },
       "execution": {"noTestsAction": "error", "stopOnFailure": true}
     },
     {

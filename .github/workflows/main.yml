@@ -1,0 +1,47 @@
+---
+name: Build and Run Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: build-all
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        os:
+          - windows-2022
+          - macos-12
+          - ubuntu-22.04
+
+        preset:
+          - default
+          - asan
+          - tsan
+
+        exclude:
+          - os: windows-2022
+            preset: asan
+
+          - os: windows-2022
+            preset: tsan
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v1
+
+      - name: Add Ninja
+        uses: seanmiddleditch/gha-setup-ninja@master
+
+      - name: Build native
+        run:  |
+          cmake --preset ${{ matrix.preset}}
+          cmake --build --preset ${{ matrix.preset}}
+          ctest --preset ${{ matrix.preset}} --output-on-failure -V
+          
