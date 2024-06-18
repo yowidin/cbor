@@ -17,7 +17,7 @@ namespace cbor {
 
 namespace detail {
 
-struct head {
+struct CBOR_EXPORT head {
    //!< Raw header byte
    std::uint8_t raw;
 
@@ -44,7 +44,7 @@ struct head {
 /// Integers
 ////////////////////////////////////////////////////////////////////////////////
 template <UnsignedInt T>
-[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, T &v) {
+[[nodiscard]] std::error_code decode(read_buffer &buf, T &v) {
    detail::head head{};
    auto res = head.read(buf);
    if (res) {
@@ -66,7 +66,7 @@ template <UnsignedInt T>
 }
 
 template <SignedInt T>
-[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, T &v) {
+[[nodiscard]] std::error_code decode(read_buffer &buf, T &v) {
    detail::head head{};
    auto res = head.read(buf);
    if (res) {
@@ -110,7 +110,7 @@ template <SignedInt T>
 /// Enums
 ////////////////////////////////////////////////////////////////////////////////
 template <Enum T>
-[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, T &v) {
+[[nodiscard]] std::error_code decode(read_buffer &buf, T &v) {
    using int_t = std::underlying_type_t<T>;
 
    int_t as_int;
@@ -127,9 +127,9 @@ template <Enum T>
 /// Byte Arrays
 ////////////////////////////////////////////////////////////////////////////////
 template <typename Allocator, typename VectorT = std::vector<std::byte, Allocator>>
-[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf,
-                                                 std::vector<std::byte, Allocator> &v,
-                                                 max_size_t<VectorT> max_size = max_size_v<VectorT>) {
+[[nodiscard]] std::error_code decode(read_buffer &buf,
+                                     std::vector<std::byte, Allocator> &v,
+                                     max_size_t<VectorT> max_size = max_size_v<VectorT>) {
    static_assert(max_int_v<std::uint64_t> <= max_size_v<VectorT>);
 
    detail::head head{};
@@ -157,7 +157,7 @@ template <typename Allocator, typename VectorT = std::vector<std::byte, Allocato
 }
 
 template <std::size_t Extent>
-[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, std::array<std::byte, Extent> &v) {
+[[nodiscard]] std::error_code decode(read_buffer &buf, std::array<std::byte, Extent> &v) {
    using array_t = std::array<std::byte, Extent>;
    static_assert(max_int_v<std::uint64_t> <= max_size_v<array_t>);
 
@@ -194,9 +194,9 @@ template <typename CharT,
           typename Traits,
           typename Allocator,
           typename StringT = std::basic_string<CharT, Traits, Allocator>>
-[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf,
-                                                 std::basic_string<CharT, Traits, Allocator> &v,
-                                                 max_size_t<StringT> max_size = max_size_v<StringT>) {
+[[nodiscard]] std::error_code decode(read_buffer &buf,
+                                     std::basic_string<CharT, Traits, Allocator> &v,
+                                     max_size_t<StringT> max_size = max_size_v<StringT>) {
    static_assert(max_int_v<std::uint64_t> <= max_size_v<StringT>);
    static_assert(sizeof(typename StringT::value_type) == sizeof(std::byte));
 
@@ -230,7 +230,7 @@ template <typename CharT,
 [[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, bool &v);
 
 template <typename T>
-[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, std::optional<T> &v) {
+[[nodiscard]] std::error_code decode(read_buffer &buf, std::optional<T> &v) {
    {
       using namespace cbor::detail;
 
@@ -329,7 +329,7 @@ std::error_code try_decode_all(std::uint64_t type_id, read_buffer &buf, VariantT
  */
 template <typename... T>
    requires AllWithTypeID<T...> && AllDecodable<T...>
-[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, std::variant<T...> &v) {
+[[nodiscard]] std::error_code decode(read_buffer &buf, std::variant<T...> &v) {
    static_assert(detail::all_alternatives_are_unique<T...>(),
                  "TypeID duplicates are not allowed for variant alternatives");
    // Decode the array header
@@ -395,7 +395,7 @@ std::error_code decode_all(read_buffer &buf, T &v, std::index_sequence<Ns...>) {
  * @return Operation result.
  */
 template <DecodableStruct T>
-[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, T &v) {
+[[nodiscard]] std::error_code decode(read_buffer &buf, T &v) {
    // Decode and check the number of fields
    detail::head head{};
    auto res = head.read(buf);
@@ -430,7 +430,7 @@ template <typename T>
 concept DecodableNonByte = Decodable<T> && !IsByte<T>;
 
 template <DecodableNonByte T, std::size_t Extent>
-[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, std::span<T, Extent> v) {
+[[nodiscard]] std::error_code decode(read_buffer &buf, std::span<T, Extent> v) {
    using span_t = std::span<T, Extent>;
    using span_size_t = typename span_t::size_type;
    static_assert(max_int_v<std::uint64_t> <= max_int_v<span_size_t>);
@@ -469,8 +469,8 @@ template <DecodableNonByte T, std::size_t Extent>
 }
 
 template <DecodableNonByte T, typename Allocator, typename VectorT = std::vector<T, Allocator>>
-[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf,
-                                                 std::vector<T, Allocator> &v,
+[[nodiscard]] std::error_code decode(read_buffer &buf,
+                                     std::vector<T, Allocator> &v,
                                                  max_size_t<VectorT> max_size = max_size_v<VectorT>) {
    static_assert(max_int_v<std::uint64_t> <= max_size_v<VectorT>);
 
@@ -506,7 +506,7 @@ template <DecodableNonByte T, typename Allocator, typename VectorT = std::vector
 }
 
 template <Decodable T, std::size_t Extent>
-[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, std::array<T, Extent> &v) {
+[[nodiscard]] std::error_code decode(read_buffer &buf, std::array<T, Extent> &v) {
    using array_t = std::array<T, Extent>;
    using array_size_t = typename array_t::size_type;
    static_assert(max_int_v<std::uint64_t> <= max_int_v<array_size_t>);
@@ -520,7 +520,7 @@ template <typename T>
 concept DecodableDictionary = Dictionary<T> && Decodable<key_type_t<T>> && Decodable<mapped_type_t<T>>;
 
 template <DecodableDictionary T>
-[[nodiscard]] CBOR_EXPORT std::error_code decode(read_buffer &buf, T &v, max_size_t<T> max_size = max_size_v<T>) {
+[[nodiscard]] std::error_code decode(read_buffer &buf, T &v, max_size_t<T> max_size = max_size_v<T>) {
    static_assert(max_int_v<std::uint64_t> <= max_size_v<T>);
 
    detail::head head{};

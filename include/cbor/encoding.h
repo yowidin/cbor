@@ -151,22 +151,22 @@ inline constexpr uint16_t ONE_EXTRA_BYTE_VALUE_LIMIT = 0xFFU;
 inline constexpr uint32_t TWO_EXTRA_BYTES_VALUE_LIMIT = 0xFFFFU;
 inline constexpr uint64_t FOUR_EXTRA_BYTES_VALUE_LIMIT = 0xFFFFFFFFU;
 
-[[nodiscard]] std::error_code encode_argument(buffer &buf,
-                                              major_type type,
-                                              std::uint8_t argument,
-                                              bool compress = true);
-[[nodiscard]] std::error_code encode_argument(buffer &buf,
-                                              major_type type,
-                                              std::uint16_t argument,
-                                              bool compress = true);
-[[nodiscard]] std::error_code encode_argument(buffer &buf,
-                                              major_type type,
-                                              std::uint32_t argument,
-                                              bool compress = true);
-[[nodiscard]] std::error_code encode_argument(buffer &buf,
-                                              major_type type,
-                                              std::uint64_t argument,
-                                              bool compress = true);
+[[nodiscard]] CBOR_EXPORT std::error_code encode_argument(buffer &buf,
+                                                          major_type type,
+                                                          std::uint8_t argument,
+                                                          bool compress = true);
+[[nodiscard]] CBOR_EXPORT std::error_code encode_argument(buffer &buf,
+                                                          major_type type,
+                                                          std::uint16_t argument,
+                                                          bool compress = true);
+[[nodiscard]] CBOR_EXPORT std::error_code encode_argument(buffer &buf,
+                                                          major_type type,
+                                                          std::uint32_t argument,
+                                                          bool compress = true);
+[[nodiscard]] CBOR_EXPORT std::error_code encode_argument(buffer &buf,
+                                                          major_type type,
+                                                          std::uint64_t argument,
+                                                          bool compress = true);
 
 inline std::byte operator|(major_type m, argument_size s) {
    const auto lhs = static_cast<std::byte>(m);
@@ -190,7 +190,7 @@ inline std::byte operator|(std::byte b, std::uint8_t v) {
 /// Integers
 ////////////////////////////////////////////////////////////////////////////////
 template <UnsignedInt T>
-[[nodiscard]] CBOR_EXPORT std::error_code encode_argument(buffer &buf, major_type type, T argument) {
+[[nodiscard]] std::error_code encode_argument(buffer &buf, major_type type, T argument) {
    if (argument <= max_int_v<std::uint8_t>) {
       return detail::encode_argument(buf, type, static_cast<std::uint8_t>(argument));
    }
@@ -211,12 +211,12 @@ template <UnsignedInt T>
 }
 
 template <UnsignedInt T>
-[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, T v) {
+[[nodiscard]] std::error_code encode(buffer &buf, T v) {
    return encode_argument(buf, major_type::unsigned_int, v);
 }
 
 template <SignedInt T>
-[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, T v) {
+[[nodiscard]] std::error_code encode(buffer &buf, T v) {
    using unsigned_t = std::make_unsigned_t<T>;
    if (v < 0) {
       const auto argument = static_cast<unsigned_t>(static_cast<T>(-1) - v);
@@ -230,7 +230,7 @@ template <SignedInt T>
 /// Enums
 ////////////////////////////////////////////////////////////////////////////////
 template <Enum T>
-[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, T v) {
+[[nodiscard]] std::error_code encode(buffer &buf, T v) {
    const auto as_int = static_cast<std::underlying_type_t<T>>(v);
    return encode(buf, as_int);
 }
@@ -248,7 +248,7 @@ template <Enum T>
 [[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const char *v);
 
 template <typename CharT, typename Traits, typename Allocator>
-[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const std::basic_string<CharT, Traits, Allocator> &v) {
+[[nodiscard]] std::error_code encode(buffer &buf, const std::basic_string<CharT, Traits, Allocator> &v) {
    return encode(buf, std::string_view{v});
 }
 
@@ -260,7 +260,7 @@ template <typename CharT, typename Traits, typename Allocator>
 [[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, std::nullptr_t);
 
 template <typename T>
-[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const std::optional<T> &v) {
+[[nodiscard]] std::error_code encode(buffer &buf, const std::optional<T> &v) {
    if (!v.has_value()) {
       return encode(buf, nullptr);
    } else {
@@ -333,7 +333,7 @@ consteval bool all_alternatives_are_unique() {
  */
 template <typename... T>
    requires AllWithTypeID<T...> && AllEncodable<T...>
-[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const std::variant<T...> &v) {
+[[nodiscard]] std::error_code encode(buffer &buf, const std::variant<T...> &v) {
    static_assert(detail::all_alternatives_are_unique<T...>(),
                  "TypeID duplicates are not allowed for variant alternatives");
 
@@ -401,7 +401,7 @@ std::error_code encode_all(buffer &buf, const T &v, std::index_sequence<Ns...>) 
  * @return Operation result.
  */
 template <EncodableStruct T>
-[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const T &v) {
+[[nodiscard]] std::error_code encode(buffer &buf, const T &v) {
    auto rollback_helper = buf.get_rollback_helper();
 
    const auto size = get_member_count<T>();
@@ -426,7 +426,7 @@ template <EncodableStruct T>
 ////////////////////////////////////////////////////////////////////////////////
 template <typename T, std::size_t Extent>
    requires Encodable<T>
-[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, std::span<const T, Extent> v) {
+[[nodiscard]] std::error_code encode(buffer &buf, std::span<const T, Extent> v) {
    auto rollback_helper = buf.get_rollback_helper();
 
    const auto size = v.size();
@@ -449,13 +449,13 @@ template <typename T, std::size_t Extent>
 
 template <typename T, std::size_t Extent>
    requires Encodable<T>
-[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const std::array<T, Extent> &v) {
+[[nodiscard]] std::error_code encode(buffer &buf, const std::array<T, Extent> &v) {
    return encode(buf, std::span{v});
 }
 
 template <typename T, typename Allocator>
    requires Encodable<T>
-[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const std::vector<T, Allocator> &v) {
+[[nodiscard]] std::error_code encode(buffer &buf, const std::vector<T, Allocator> &v) {
    return encode(buf, std::span{v});
 }
 
@@ -466,7 +466,7 @@ template <typename T>
 concept EncodableDictionary = Dictionary<T> && Encodable<key_type_t<T>> && Encodable<mapped_type_t<T>>;
 
 template <EncodableDictionary T>
-[[nodiscard]] CBOR_EXPORT std::error_code encode(buffer &buf, const T &v) {
+[[nodiscard]] std::error_code encode(buffer &buf, const T &v) {
    auto rollback_helper = buf.get_rollback_helper();
 
    // Encode size

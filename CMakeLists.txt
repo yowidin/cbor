@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(CBOR VERSION 0.0.1)
 
+# Fix the issue of missing DLLs on Windows by putting everything into a bin directory
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 # --- Some CMake boilerplate --- #
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
