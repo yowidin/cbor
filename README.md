@@ -113,6 +113,24 @@ int main(int, char **) {
 }
 ```
 
+Output:
+
+```
+Simple CBOR example.
+   Use https://cbor.me/ to check the serialization.
+
+Encoded:
+0x00: 84 82 66 42 61 69 6C 65 79 01 82 68 57 68 69 73  ..fBailey..hWhis
+0x10: 6B 65 72 73 00 82 65 53 75 73 68 69 03 82 69 42  kers..eSushi..iB
+0x20: 75 64 77 65 69 73 65 72 02                       udweiser.
+
+Decoded:
+- Pet dog named Bailey
+- Pet cat named Whiskers
+- Pet fish named Sushi
+- Pet hamster named Budweiser
+```
+
 For more examples, please refer to the [example](./example) directory in the repository.
 
 ## License
